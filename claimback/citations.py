@@ -13,7 +13,9 @@ _TRANSLATE = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"',
 
 def normalise(text: str) -> str:
     text = text.translate(_TRANSLATE).lower()
-    text = re.sub(r"-\s*\n\s*", "", text)  # words hyphenated across OCR lines
+    # Hyphens are dropped on both sides, so "Non-\ndisclosure", "Non-disclo-\nsure" and
+    # "Non-disclosure" all compare equal; every other character must still match.
+    text = re.sub(r"-\s*\n\s*", "", text).replace("-", "")
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -22,17 +24,17 @@ class Citation:
     quote: str
     source_id: str
     verified: bool = False
-    position: int | None = None  # character offset in the normalised source, for highlighting
+    normalised_offset: int | None = None  # offset in normalise(source), not in the original text
 
 
 def verify(citation: Citation, sources: dict[str, str]) -> Citation:
     source = sources.get(citation.source_id)
     if source is None:
-        citation.verified, citation.position = False, None
+        citation.verified, citation.normalised_offset = False, None
         return citation
     pos = normalise(source).find(normalise(citation.quote))
     citation.verified = pos >= 0 and len(normalise(citation.quote)) >= 12
-    citation.position = pos if citation.verified else None
+    citation.normalised_offset = pos if citation.verified else None
     return citation
 
 

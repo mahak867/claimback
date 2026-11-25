@@ -24,6 +24,8 @@ class UnverifiedCitations(Exception):
 def grievance_letter(*, insurer: str, policy_no: str, name: str, claim_inr: int, treatment: str,
                      rejection_date: str, grounds: list[Ground], citations: list[Citation],
                      sources: dict[str, str]) -> str:
+    if not grounds or not citations:
+        raise ValueError("a grievance letter needs at least one ground and one citation")
     verified, rejected = verify_all(citations, sources)
     if rejected:
         raise UnverifiedCitations(rejected)

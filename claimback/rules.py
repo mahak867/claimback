@@ -64,7 +64,7 @@ def months_between(start: date, end: date) -> int:
 def moratorium(case: Case) -> Ground | None:
     """Non-disclosure can't be raised after the moratorium, except for fraud."""
     limit = RULES["moratorium_months"]["value"]
-    if case.rejection_ground not in ("non_disclosure_proposal", "pre_existing_disease"):
+    if case.rejection_ground != "non_disclosure_proposal":
         return None
     if not case.continuous_cover or case.fraud_alleged:
         return None
@@ -149,7 +149,7 @@ def run_rules(case: Case) -> list[Ground]:
 def strength(grounds: list[Ground]) -> str:
     """Strong / Fair / Weak. Rule-based grounds weigh more than evidence-only ones."""
     legal = sum(g.rule != "pre_policy_check" for g in grounds)
-    if legal >= 1 and len(grounds) >= 2:
+    if legal >= 1:
         return "Strong"
     if grounds:
         return "Fair"

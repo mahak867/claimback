@@ -51,10 +51,19 @@ def norm(s):
 
 
 def parse_date(s):
+    """ISO (2026-08-14) or Indian day-first (14/08/2026, 14-08-2026). None if unparseable."""
+    s = str(s).strip()
     try:
-        return date.fromisoformat(str(s)[:10])
+        return date.fromisoformat(s[:10])
     except ValueError:
-        return None
+        pass
+    m = re.fullmatch(r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})", s)
+    if m:
+        try:
+            return date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        except ValueError:
+            return None
+    return None
 
 
 def check(row):
@@ -68,12 +77,14 @@ def check(row):
             out = json.loads(m.group(0) if m else out)
         except (json.JSONDecodeError, AttributeError):
             return ["output is not valid JSON"], None
+    if not isinstance(out, dict):
+        return ["output is not a JSON object"], None
     for k in REQUIRED:
         if out.get(k) in (None, ""):
             problems.append(f"missing {k}")
     g = out.get("rejection_ground")
     if g and g not in GROUNDS:
-        problems.append(f"unknown ground {g!r}")
+        problems.append(f"unknown ground: {g!r}")
     for k in ("rejection_reason_quote", "clause_cited"):
         v = out.get(k)
         if v and norm(v) not in norm(letter):
@@ -86,12 +97,15 @@ def check(row):
         problems.append("claim_amount_inr not a number")
     a, d, p = (parse_date(out.get(k)) for k in
                ("admission_date", "discharge_date", "policy_inception_date"))
+    for k, v in zip(("admission_date", "discharge_date", "policy_inception_date"), (a, d, p)):
+        if out.get(k) and v is None:
+            problems.append(f"unreadable date: {k}")
     if a and d and d < a:
         problems.append("discharge before admission")
     if p and a and a < p:
         problems.append("admission before policy start")
     if out.get("claim_type") not in ("cashless", "reimbursement"):
-        problems.append(f"bad claim_type {out.get('claim_type')!r}")
+        problems.append(f"bad claim_type: {out.get('claim_type')!r}")
     return problems, out
 
 
@@ -103,7 +117,7 @@ def main(path):
         if out:
             grounds[out.get("rejection_ground")] += 1
         for p in problems:
-            issues[p.split(":")[0].split(" {")[0]] += 1
+            issues[p.split(":")[0]] += 1
         if problems:
             bad.append((i, problems))
     n = len(rows)
@@ -120,7 +134,8 @@ def main(path):
     print("\nFirst 5 bad rows:")
     for i, p in bad[:5]:
         print(f"  row {i}: {'; '.join(p)}")
-    clean = [r for j, r in enumerate(rows) if j not in {i for i, _ in bad}]
+    bad_ids = {i for i, _ in bad}
+    clean = [r for j, r in enumerate(rows) if j not in bad_ids]
     out_path = re.sub(r"(\.\w+)?$", "_clean.jsonl", path, count=1)
     with open(out_path, "w", encoding="utf-8") as f:
         for r in clean:

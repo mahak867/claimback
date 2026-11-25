@@ -12,12 +12,13 @@ LETTER = SOURCES["rejection_letter"]
 
 
 def test_normalise_handles_ocr_noise():
-    assert normalise("Non-disclo-\n sure  of “material”\nfacts") == 'non-disclosure of "material" facts'
+    assert normalise("Non-disclo-\n sure  of “material”\nfacts") == 'nondisclosure of "material" facts'
+    assert normalise("Non-\ndisclosure") == normalise("Non-disclosure")
 
 
 def test_verbatim_quote_verified_with_position():
     c = verify(Citation("stands repudiated under Clause 7.3", "rejection_letter"), SOURCES)
-    assert c.verified and c.position is not None
+    assert c.verified and c.normalised_offset is not None
 
 
 def test_paraphrase_is_rejected():
@@ -69,3 +70,26 @@ def test_ics_has_one_event_per_dated_step():
 def test_inr_grouping():
     from claimback.letter import inr
     assert [inr(x) for x in (500, 246500, 5000000, 12345678)] == ["500", "2,46,500", "50,00,000", "1,23,45,678"]
+
+
+def test_letter_needs_grounds_and_citations():
+    with pytest.raises(ValueError):
+        _letter([])
+
+
+def test_ics_escapes_text():
+    ics = to_ics(ladder(date(2026, 11, 25), 246500))
+    assert "Free\\; file" in ics and "portal\\, text" in ics
+
+
+def test_validator_dates_and_non_object(tmp_path):
+    import json, subprocess, sys
+    letter = "Your claim stands repudiated under Clause 7.3 as the ailment is pre-existing."
+    good = {"insurer_name": "X", "policy_number": "P", "policy_inception_date": "12/04/2019",
+            "claim_type": "cashless", "claim_amount_inr": 120000, "admission_date": "19/08/2026",
+            "discharge_date": "14/08/2026", "diagnosis": "d", "rejection_ground": "pre_existing_disease",
+            "clause_cited": "Clause 7.3", "rejection_reason_quote": "as the ailment is pre-existing"}
+    f = tmp_path / "d.jsonl"
+    f.write_text(json.dumps({"input": letter, "output": good}) + "\n" + json.dumps({"input": letter, "output": "[1, 2]"}) + "\n")
+    out = subprocess.run([sys.executable, "tools/validate_dataset.py", str(f)], capture_output=True, text=True, check=True).stdout
+    assert "discharge before admission" in out and "output is not a JSON object" in out and "clean: 0" in out

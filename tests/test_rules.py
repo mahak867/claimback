@@ -62,3 +62,11 @@ def test_strength_matches_prototype_case():
 
 def test_strength_weak_when_nothing_found():
     assert strength(run_rules(sample(admission=date(2020, 1, 1)))) == "Weak"
+
+
+def test_moratorium_not_for_ped_exclusion():
+    assert "moratorium" not in rules_hit(sample(rejection_ground="pre_existing_disease"))
+
+
+def test_single_legal_ground_is_strong():
+    assert strength(run_rules(sample())) == "Strong"

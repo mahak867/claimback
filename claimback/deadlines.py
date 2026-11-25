@@ -40,6 +40,11 @@ def ladder(grievance_sent: date, claim_amount_inr: int) -> list[Step]:
     return steps
 
 
+def _ics_text(s: str) -> str:
+    """Escape TEXT values per RFC 5545."""
+    return s.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
 def to_ics(steps: list[Step]) -> str:
     """Calendar file with one all-day event per dated step."""
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ClaimBack//EN"]
@@ -48,6 +53,6 @@ def to_ics(steps: list[Step]) -> str:
             continue
         d = s.due.strftime("%Y%m%d")
         lines += ["BEGIN:VEVENT", f"UID:claimback-{d}-{i}", f"DTSTAMP:{d}T000000Z",
-                  f"DTSTART;VALUE=DATE:{d}", f"SUMMARY:ClaimBack: {s.name}", f"DESCRIPTION:{s.note}", "END:VEVENT"]
+                  f"DTSTART;VALUE=DATE:{d}", f"SUMMARY:{_ics_text('ClaimBack: ' + s.name)}", f"DESCRIPTION:{_ics_text(s.note)}", "END:VEVENT"]
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"

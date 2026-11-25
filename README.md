@@ -8,7 +8,7 @@ Built for AI Vibeathon 2026 (DotRepo, powered by Adaption), **Open Innovation** 
 
 ![ClaimBack prototype: upload, agent steps, verdict with verified sources, Tamil and Hindi, appeal letter, deadline plan](docs/demo.gif)
 
-25-second walkthrough of the prototype: [docs/demo.mp4](docs/demo.mp4).
+**Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 25-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
 
 ## Why
 

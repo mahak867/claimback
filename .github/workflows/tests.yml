@@ -1,7 +1,7 @@
 name: tests
 on: [push, pull_request]
 jobs:
-  test:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -11,3 +11,13 @@ jobs:
       - run: pip install pytest
       - run: python -m pytest -q
       - run: python -m claimback.demo
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm i --no-save playwright@1.63.0 axe-core@4.10.2
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/e2e/prototype.e2e.cjs

@@ -9,7 +9,7 @@
    COLOUR graphite neutrals, registry green #0b6b55 for the one action, highlighter yellow #ffe27a for quoted evidence, amber for deadlines
    TYPE IBM Plex Sans (with its Tamil companion) for the interface, Source Serif 4 for documents and letters
    LAYOUT laptop: text left, annotated letter right; phone: title, letter, actions. Signature: numbered exhibit chips with highlighter */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#101213);--panel:light-dark(#f5f6f6,#181b1c);--ink:light-dark(#16191b,#e9ecec);--mute:light-dark(#5b6366,#a3abad);--line:light-dark(rgb(22 25 27/.1),rgb(233 236 236/.1));--teal:light-dark(#0b6b55,#3fbf9b);--tealbg:light-dark(#e8f3ef,#14261f);--hl:light-dark(#ffe27a,#6b5a12);--amber:light-dark(#b45309,#f0a54a);--amberbg:light-dark(#fdf3e7,#2a1e10);--green:light-dark(#15803d,#4ade80);--red:light-dark(#b91c1c,#f87171)}
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#101213);--panel:light-dark(#f5f6f6,#181b1c);--ink:light-dark(#16191b,#e9ecec);--mute:light-dark(#5b6366,#a3abad);--line:light-dark(rgb(22 25 27/.1),rgb(233 236 236/.1));--teal:light-dark(#0b6b55,#3fbf9b);--onteal:light-dark(#ffffff,#0b1513);--tealbg:light-dark(#e8f3ef,#14261f);--hl:light-dark(#ffe27a,#6b5a12);--amber:light-dark(#b45309,#f0a54a);--amberbg:light-dark(#fdf3e7,#2a1e10);--green:light-dark(#15803d,#4ade80);--red:light-dark(#b91c1c,#f87171)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
@@ -28,7 +28,7 @@ header{border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-ins
 .sample{font-size:13px;color:var(--mute)}
 .lang{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .lang button{border:0;background:none;color:var(--ink);padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
-.lang button[aria-pressed=true]{background:var(--teal);color:#fff}
+.lang button[aria-pressed=true]{background:var(--teal);color:var(--onteal)}
 nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px}
 nav a{flex:none;text-decoration:none;color:var(--mute);font-size:14px;padding:6px 12px;border-radius:8px}
 nav a[aria-current=page]{background:var(--tealbg);color:var(--teal);font-weight:600}
@@ -36,7 +36,7 @@ main{padding-block:28px 56px}
 h1{font-size:clamp(30px,4.2vw,44px);line-height:1.1;letter-spacing:-.02em;font-weight:500;margin:0 0 16px}
 h2{font-size:21px;font-weight:500;margin:0 0 12px}
 p{margin:0 0 12px}.mute{color:var(--mute)}.small{font-size:14px}
-.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:12px 18px;font:500 16px "IBM Plex Sans",sans-serif;cursor:pointer;text-decoration:none;background:var(--teal);color:#fff;min-height:44px;transition:background .15s}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:12px 18px;font:500 16px "IBM Plex Sans",sans-serif;cursor:pointer;text-decoration:none;background:var(--teal);color:var(--onteal);min-height:44px;transition:background .15s}
 .btn:hover{background:color-mix(in srgb,var(--teal) 88%,#000)}
 .btn:active{transform:scale(.98)}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
@@ -69,7 +69,7 @@ p{margin:0 0 12px}.mute{color:var(--mute)}.small{font-size:14px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chip{border:1px solid var(--line);color:var(--ink);background:var(--bg);border-radius:6px;padding:4px 10px 4px 4px;font:400 14px "IBM Plex Sans",sans-serif;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
 .chip:hover{border-color:var(--teal)}
-.chip b{background:var(--hl);color:#1c1f21;border-radius:3px;padding:0 6px;font-weight:600;font-size:13px}
+.chip b{background:#ffe27a;color:#1c1f21;border-radius:3px;padding:0 6px;font-weight:600;font-size:13px}
 .prec{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
 .tag{font-size:13px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap;align-self:start}
 .tag.won{background:#dcfce7;color:#166534}.tag.part{background:#fef3c7;color:#92400e}.tag.lost{background:#fee2e2;color:#991b1b}
@@ -293,6 +293,7 @@ track: () => `
 const app = document.getElementById('app'), nav = document.getElementById('nav'), drawer = document.getElementById('drawer');
 let timer;
 function render(){
+  document.documentElement.lang = lang;
   const id = (location.hash.slice(1) || 'home');
   const cur = page[id] ? id : 'home';
   nav.innerHTML = S.map(([k,l])=>`<a href="#${k}" ${k===cur?'aria-current="page"':''}>${l}</a>`).join('');

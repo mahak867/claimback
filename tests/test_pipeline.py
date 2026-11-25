@@ -85,9 +85,9 @@ def test_ics_escapes_text():
 def test_validator_dates_and_non_object(tmp_path):
     import json, subprocess, sys
     letter = "Your claim stands repudiated under Clause 7.3 as the ailment is pre-existing."
-    good = {"insurer_name": "X", "policy_number": "P", "policy_inception_date": "12/04/2019",
-            "claim_type": "cashless", "claim_amount_inr": 120000, "admission_date": "19/08/2026",
-            "discharge_date": "14/08/2026", "diagnosis": "d", "rejection_ground": "pre_existing_disease",
+    good = {"insurer_name": "X", "policy_number": "P", "policy_inception_date": "2019-04-12",
+            "claim_type": "cashless", "claim_amount_inr": 120000, "admission_date": "2026-08-19",
+            "discharge_date": "2026-08-14", "diagnosis": "d", "rejection_ground": "pre_existing_disease",
             "clause_cited": "Clause 7.3", "rejection_reason_quote": "as the ailment is pre-existing"}
     f = tmp_path / "d.jsonl"
     f.write_text(json.dumps({"input": letter, "output": good}) + "\n" + json.dumps({"input": letter, "output": "[1, 2]"}) + "\n")

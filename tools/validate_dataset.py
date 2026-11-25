@@ -23,8 +23,12 @@ REQUIRED = [
     "claim_amount_inr", "admission_date", "discharge_date", "diagnosis",
     "rejection_ground", "clause_cited", "rejection_reason_quote",
 ]
-IN_KEYS = ("input", "prompt", "instruction", "question", "text")
-OUT_KEYS = ("output", "response", "completion", "answer")
+# These may be null when the letter genuinely doesn't state them; the key must still be present.
+NULLABLE = {"policy_number", "policy_inception_date", "admission_date", "discharge_date", "clause_cited"}
+INSTRUCTION = re.compile(r"\b(please (generate|create|draft|write)|generate an?|draft an?|write an?|the letter should|"
+                         r"the tone should|use formal indian english|the ground (for rejection )?is)\b", re.I)
+IN_KEYS = ("input", "prompt", "enhanced_prompt", "instruction", "question", "text")
+OUT_KEYS = ("output", "response", "completion", "enhanced_completion", "answer")
 
 
 def load(path):
@@ -79,9 +83,13 @@ def check(row):
             return ["output is not valid JSON"], None
     if not isinstance(out, dict):
         return ["output is not a JSON object"], None
+    if INSTRUCTION.search(str(letter)):
+        problems.append("input is an instruction, not a letter")
     for k in REQUIRED:
-        if out.get(k) in (None, ""):
-            problems.append(f"missing {k}")
+        if k not in out:
+            problems.append(f"missing key: {k}")
+        elif out[k] in (None, "") and k not in NULLABLE:
+            problems.append(f"missing value: {k}")
     g = out.get("rejection_ground")
     if g and g not in GROUNDS:
         problems.append(f"unknown ground: {g!r}")
@@ -91,20 +99,20 @@ def check(row):
             problems.append(f"{k} not verbatim in letter")
     try:
         amt = float(str(out.get("claim_amount_inr", "")).replace(",", ""))
-        if not 20_000 <= amt <= 800_000:
+        if not 5_000 <= amt <= 25_00_000:
             problems.append(f"amount out of range: {amt:.0f}")
     except ValueError:
         problems.append("claim_amount_inr not a number")
     a, d, p = (parse_date(out.get(k)) for k in
                ("admission_date", "discharge_date", "policy_inception_date"))
     for k, v in zip(("admission_date", "discharge_date", "policy_inception_date"), (a, d, p)):
-        if out.get(k) and v is None:
-            problems.append(f"unreadable date: {k}")
+        if out.get(k) and (v is None or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(out[k]))):
+            problems.append(f"date not YYYY-MM-DD: {k}")
     if a and d and d < a:
         problems.append("discharge before admission")
     if p and a and a < p:
         problems.append("admission before policy start")
-    if out.get("claim_type") not in ("cashless", "reimbursement"):
+    if out.get("claim_type") not in ("cashless", "reimbursement", "partial_settlement"):
         problems.append(f"bad claim_type: {out.get('claim_type')!r}")
     return problems, out
 

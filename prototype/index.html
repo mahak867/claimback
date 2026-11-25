@@ -1,0 +1,308 @@
+<title>ClaimBack Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Tamil:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday product, calm and exact, a legal-aid clerk who shows their working (direction per unslop + frontend-design)
+   IDEA a case file: every claim on screen is pinned, like a court exhibit, to the page it came from
+   PICTURE the insurer's rejection letter itself, highlighted and annotated in the margin with why it fails
+   COLOUR graphite neutrals, registry green #0b6b55 for the one action, highlighter yellow #ffe27a for quoted evidence, amber for deadlines
+   TYPE IBM Plex Sans (with its Tamil companion) for the interface, Source Serif 4 for documents and letters
+   LAYOUT laptop: text left, annotated letter right; phone: title, letter, actions. Signature: numbered exhibit chips with highlighter */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#101213);--panel:light-dark(#f5f6f6,#181b1c);--ink:light-dark(#16191b,#e9ecec);--mute:light-dark(#5b6366,#a3abad);--line:light-dark(rgb(22 25 27/.1),rgb(233 236 236/.1));--teal:light-dark(#0b6b55,#3fbf9b);--tealbg:light-dark(#e8f3ef,#14261f);--hl:light-dark(#ffe27a,#6b5a12);--amber:light-dark(#b45309,#f0a54a);--amberbg:light-dark(#fdf3e7,#2a1e10);--green:light-dark(#15803d,#4ade80);--red:light-dark(#b91c1c,#f87171)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+.ta{font-family:"IBM Plex Sans Tamil","IBM Plex Sans",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.bar{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.logo{font-weight:600;font-size:19px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.logo i{width:26px;height:26px;border-radius:7px;background:var(--teal);display:inline-grid;place-items:center;color:#fff;font-style:normal;font-size:15px}
+.sample{font-size:13px;color:var(--mute)}
+.lang{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.lang button{border:0;background:none;color:var(--ink);padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--teal);color:#fff}
+nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px}
+nav a{flex:none;text-decoration:none;color:var(--mute);font-size:14px;padding:6px 12px;border-radius:8px}
+nav a[aria-current=page]{background:var(--tealbg);color:var(--teal);font-weight:600}
+main{padding-block:28px 56px}
+h1{font-size:clamp(30px,4.2vw,44px);line-height:1.1;letter-spacing:-.02em;font-weight:500;margin:0 0 16px}
+h2{font-size:21px;font-weight:500;margin:0 0 12px}
+p{margin:0 0 12px}.mute{color:var(--mute)}.small{font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:12px 18px;font:500 16px "IBM Plex Sans",sans-serif;cursor:pointer;text-decoration:none;background:var(--teal);color:#fff;min-height:44px;transition:background .15s}
+.btn:hover{background:color-mix(in srgb,var(--teal) 88%,#000)}
+.btn:active{transform:scale(.98)}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.btn.ghost{background:none;color:var(--teal);border:1px solid var(--line)}
+.grid{display:grid;gap:24px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:860px){.grid.two{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}
+.big{font-size:clamp(44px,7vw,68px);font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--teal)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(10em,1fr));gap:16px;margin:20px 0}
+.stat b{display:block;font-size:24px;font-weight:500}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.drop.done{border-style:solid;border-color:var(--teal);background:var(--tealbg)}
+.thumb{width:46px;height:58px;border-radius:4px;background:#fff;border:1px solid var(--line);flex:none;position:relative}
+.thumb::after{content:"";position:absolute;inset:10px 8px auto;height:22px;background:repeating-linear-gradient(#cbd5e1 0 2px,transparent 2px 6px)}
+.ok{color:var(--green);font-weight:600;font-size:14px;white-space:nowrap}
+.trace{list-style:none;margin:0;padding:0}
+.trace li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;opacity:0;transform:translateY(4px);transition:.3s}
+.trace li.in{opacity:1;transform:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:7px}
+.dot.flag{background:var(--amber)}
+.doc{background:#fffefa;color:#1c1f21;border:1px solid rgb(0 0 0/.12);border-radius:4px;padding:24px;font:15px/1.65 "Source Serif 4",Georgia,serif;box-shadow:0 1px 2px rgb(0 0 0/.06)}
+.doc mark{background:linear-gradient(transparent 12%,#ffe27a 12%,#ffe27a 88%,transparent 88%);color:inherit;padding:0 2px}
+.doc mark.t{background:none;text-decoration:underline 2px #b45309;text-underline-offset:3px}
+.meter{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:10px 0 6px}
+.meter span{height:10px;border-radius:3px;background:var(--line)}
+.meter span.on{background:var(--teal)}
+.verdict{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between}
+.ground{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--bg)}
+.ground h3{margin:0 0 6px;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid var(--line);color:var(--ink);background:var(--bg);border-radius:6px;padding:4px 10px 4px 4px;font:400 14px "IBM Plex Sans",sans-serif;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.chip:hover{border-color:var(--teal)}
+.chip b{background:var(--hl);color:#1c1f21;border-radius:3px;padding:0 6px;font-weight:600;font-size:13px}
+.prec{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.tag{font-size:13px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap;align-self:start}
+.tag.won{background:#dcfce7;color:#166534}.tag.part{background:#fef3c7;color:#92400e}.tag.lost{background:#fee2e2;color:#991b1b}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));z-index:9;overflow:auto;box-shadow:-8px 0 24px rgb(0 0 0/.08)}
+.letter{background:#fffefa;color:#1c1f21;border:1px solid rgb(0 0 0/.12);border-radius:4px;padding:32px;font:16px/1.75 "Source Serif 4",Georgia,serif;box-shadow:0 1px 2px rgb(0 0 0/.06)}
+.letter sup{background:#ffe27a;color:#1c1f21;border-radius:2px;padding:0 3px;font:600 11px "IBM Plex Sans",sans-serif}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{border:1px solid var(--line);background:none;color:var(--ink);border-radius:8px;padding:8px 12px;font:14px "IBM Plex Sans",sans-serif;cursor:pointer}
+.tabs button[aria-pressed=true]{border-color:var(--teal);color:var(--teal);background:var(--tealbg)}
+.tabs button:disabled{opacity:.5;cursor:not-allowed}
+.rail{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);margin-left:8px}
+.rail li{position:relative;padding:0 0 22px 22px}
+.rail li::before{content:"";position:absolute;left:-8px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--line)}
+.rail li.done::before{background:var(--teal);border-color:var(--teal)}
+.rail li.now::before{border-color:var(--amber);background:var(--amberbg)}
+.date{font-weight:600;white-space:nowrap}
+.gate{margin-top:12px;font-size:13px;color:var(--mute)}
+.case{position:relative}
+.note{position:absolute;right:-8px;max-width:220px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:4px;padding:10px 12px;font:14px/1.45 "IBM Plex Sans",sans-serif;color:var(--ink);box-shadow:0 4px 12px rgb(0 0 0/.08)}
+.note b{font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(12em,1fr));gap:24px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+.facts b{display:block;font-size:22px;font-weight:500}
+@media(max-width:700px){.note{position:static;max-width:none;margin-top:12px}}
+footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.trace li{transition:none}}
+</style>
+
+<header><div class="wrap">
+  <div class="bar">
+    <div class="logo"><i>₹</i>ClaimBack</div>
+    <span class="sample">Prototype with a fictional case</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="lang-en" aria-pressed="true">English</button>
+      <button id="lang-ta" class="ta" aria-pressed="false">தமிழ்</button>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</div></header>
+
+<main class="wrap" id="app"></main>
+<div id="drawer" class="drawer" hidden></div>
+
+<footer><div class="wrap">ClaimBack is a hackathon prototype by Mahak Fahad and Roshini R. The case, people, insurer and decisions shown are fictional samples. Not legal advice. Check before you send.</div></footer>
+
+<script>
+{
+const S = [['home','Start'],['upload','Upload'],['analyse','Agent'],['verdict','Verdict'],['letter','Letter'],['track','Track']];
+let lang = 'en';
+const C = {name:'Meena S.', city:'Chennai', insurer:'Suraksha General Insurance Ltd (fictional)', policy:'SGI/HL/2019/448213', since:'12 Apr 2019', admit:'14 Aug 2026', diag:'Coronary angioplasty', amount:246500, rejected:'2 Sep 2026', months:88};
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+
+const SRC = {
+  rej: {t:'Rejection letter, page 1', q:'Your claim stands repudiated under Clause 7.3 (Non-disclosure of material facts) as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.'},
+  mor: {p:1, t:'IRDAI Master Circular on Health Insurance Business, 29 May 2024 — moratorium', q:'After completion of sixty continuous months of coverage, no policy and claim shall be contestable on grounds of non-disclosure or misrepresentation, except on grounds of established fraud.'},
+  pol: {t:'Your policy wording, page 14, Clause 7.3', q:'… subject to the moratorium period of 60 months of continuous coverage as stipulated by the Authority.'},
+  cert: {t:'Renewal certificate, page 1', q:'Policy continuously renewed without break since 12/04/2019. Cumulative bonus: 50%.'},
+  med: {t:'Pre-policy health check, 9 Apr 2019', q:'BP 128/82. No abnormalities detected. Accepted at standard rates.'}
+};
+const EX = {rej:'E1', mor:'E2', pol:'E3', cert:'E4', med:'E5'};
+const GROUNDS = [
+  {h:'The moratorium protects this claim', ta:'60 மாத தொடர் காப்பீட்டுக்குப் பிறகு இந்த காரணத்தால் மறுக்க முடியாது', b:'Your policy has run for 88 continuous months. After 60 months, an insurer cannot reject a claim for non-disclosure unless it proves fraud. The letter does not allege fraud.', c:['mor','pol','cert']},
+  {h:'The insurer checked your health before issuing the policy', ta:'பாலிசி வழங்கும் முன் காப்பீட்டு நிறுவனமே உடல்நலப் பரிசோதனை செய்தது', b:'A pre-policy check in April 2019 recorded normal blood pressure and accepted you at standard rates. The "undisclosed hypertension" claim conflicts with the insurer\'s own record.', c:['med','rej']}
+];
+const PREC = [
+  ['Non-disclosure raised in policy year 6; moratorium applied', 'Allowed', 'won'],
+  ['Hypertension "concealed"; insurer\'s own medical test showed normal BP', 'Allowed', 'won'],
+  ['Non-disclosure inside year 3; history in hospital records', 'Dismissed', 'lost']
+];
+const TRACE = [
+  ['Reading rejection letter', 'Found: repudiated under Clause 7.3, non-disclosure of hypertension', 0],
+  ['Reading policy wording (32 pages)', 'Clause 7.3 found on page 14; mentions a 60-month moratorium', 0],
+  ['Reading renewal certificate', 'Continuous cover since 12 Apr 2019 → 88 months at admission', 0],
+  ['Classifying rejection reason', 'Non-disclosure at proposal (category G1)', 0],
+  ['Rules engine: moratorium check', '88 ≥ 60 months and no fraud alleged → ground found', 0],
+  ['Searching IRDAI regulations', '3 passages matched; best: Master Circular 2024, moratorium', 0],
+  ['Checking pre-policy medical record', 'BP normal in 2019 → conflicts with the rejection reason', 0],
+  ['Finding similar Ombudsman decisions', '3 past cases with the same reason', 0],
+  ['Verifying every citation word for word', '5 of 5 quotes found in their sources', 0],
+  ['One fact missing', 'Has the policy been renewed every year without a gap? (answered: yes)', 1]
+];
+
+const page = {
+home: () => `
+  <div class="grid two" style="align-items:center">
+    <div>
+      <h1>Rejected health insurance claim? Get a cited appeal letter in minutes.</h1>
+      <p class="mute">ClaimBack reads the insurer's letter and your policy, checks them against IRDAI rules, shows how the Ombudsman ruled in cases like yours, and writes the appeal in English, Tamil or Hindi. Free for patients.</p>
+      <p style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px"><a class="btn" href="#upload">Check my rejection</a><a class="btn ghost" href="#analyse">Try the sample case</a></p>
+      <p class="small mute">Documents are deleted after 24 hours. Runs on our own open-source model.</p>
+    </div>
+    <div class="case">
+      <div class="doc" style="padding-right:clamp(24px,18vw,236px)">
+        <p><b>SURAKSHA GENERAL INSURANCE LTD</b><br><span style="color:#5b6366">Claims Department, Chennai, 02/09/2026</span></p>
+        <p>Dear Ms Meena S.,</p>
+        <p>Your claim for ${inr(C.amount)} <mark>stands repudiated under Clause 7.3</mark> as the insured was found to be suffering from Hypertension prior to policy inception, <mark>which was not disclosed</mark> in the proposal form.</p>
+        <p style="margin:0">Claims Manager</p>
+      </div>
+      <div class="note" style="top:178px"><b>Covered 88 months.</b> After 60 continuous months a claim can't be refused for non-disclosure without proof of fraud.</div>
+      <div class="note" style="top:318px"><b>Your 2019 health check</b> by this insurer recorded normal blood pressure.</div>
+    </div>
+  </div>
+  <div class="facts">
+    <div><b>47%</b><span class="small mute">of policyholders in 3,831 Ombudsman rulings on rejected claims got money back</span></div>
+    <div><b>₹26,038 crore</b><span class="small mute">of health claims disallowed or rejected in FY24</span></div>
+    <div><b>1 in 12</b><span class="small mute">health claims rejected in FY25</span></div>
+    <div><b>Free</b><span class="small mute">against 15–18% charged by claim-recovery firms</span></div>
+  </div>
+  <p class="small mute" style="margin-top:12px">Sources: IRDAI data reported by Moneylife and NewsBytes; Alei analysis of published Ombudsman awards. The letter above is a fictional sample.</p>`,
+upload: () => `
+  <div class="grid two">
+    <div>
+      <h1>Add your documents</h1>
+      <p class="mute">Only the rejection letter is required. Photos from your phone are fine.</p>
+      ${[['Rejection letter','SGI_repudiation_02Sep2026.pdf · 1 page'],['Policy wording','SGI_Family_Health_Wording.pdf · 32 pages'],['Hospital bill / discharge summary','Discharge_Summary_19Aug.pdf · 4 pages'],['Renewal certificate (optional)','Renewal_2026.jpg']].map(([t,f])=>`
+        <div class="drop done"><div class="thumb"></div><div style="flex:1"><b>${t}</b><div class="small mute">${f}</div></div><span class="ok">Read</span></div>`).join('')}
+      <p style="margin-top:16px"><a class="btn" href="#analyse">Check my case</a></p>
+    </div>
+    <div class="card"><h2>What we pull out</h2>
+      <p class="small mute">Read automatically from the sample documents:</p>
+      ${[['Insurer',C.insurer],['Policy number',C.policy],['Covered since',C.since],['Admitted',C.admit],['Treatment',C.diag],['Claim amount',inr(C.amount)],['Rejected on',C.rejected]].map(([k,v])=>`<div class="prec"><span class="mute">${k}</span><b>${esc(v)}</b></div>`).join('')}
+    </div>
+  </div>`,
+analyse: () => `
+  <div class="grid two">
+    <div>
+      <h1>ClaimBack is checking your case</h1>
+      <p class="mute">Every step is shown. Nothing reaches your verdict unless its source is found word for word.</p>
+      <ol class="trace" id="trace">${TRACE.map(([a,b,f])=>`<li><span class="dot ${f?'flag':''}"></span><span><b>${a}</b><br><span class="small mute">${b}</span></span></li>`).join('')}</ol>
+      <p style="margin-top:18px"><a class="btn" href="#verdict" id="toV" hidden>See the verdict</a></p>
+    </div>
+    <div><p class="small mute">Rejection letter · page 1</p>
+      <div class="doc">
+        <p><b>SURAKSHA GENERAL INSURANCE LTD</b><br>Claims Department, Chennai</p>
+        <p>Date: 02/09/2026 &nbsp; Policy No: ${C.policy}</p>
+        <p>Dear Ms Meena S.,</p>
+        <p>We refer to your cashless request for ${inr(C.amount)} towards Coronary Angioplasty at the hospital from 14/08/2026 to 19/08/2026.</p>
+        <p><mark>Your claim stands repudiated under <mark class="t">Clause 7.3 (Non-disclosure of material facts)</mark> as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.</mark></p>
+        <p>You may approach our Grievance Redressal Officer if you are not satisfied with this decision.</p>
+      </div>
+    </div>
+  </div>`,
+verdict: () => `
+  <div class="card" style="margin-bottom:24px"><div class="verdict">
+    <div style="flex:1 1 320px"><p class="small mute" style="margin:0">Case strength</p>
+      <h1 style="margin:4px 0 0">Strong case. Appeal this rejection</h1>
+      <div class="meter"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+      <p class="${lang==='ta'?'ta':''}" style="margin:8px 0 0">${lang==='ta'?'உங்கள் பாலிசி 88 மாதங்களாக தொடர்ந்து உள்ளது. 60 மாதங்களுக்குப் பிறகு, மோசடி நிரூபிக்கப்படாவிட்டால், தகவல் மறைப்பு காரணமாக காப்பீட்டு நிறுவனம் கோரிக்கையை மறுக்க முடியாது.':'2 grounds found, every citation verified. Your policy is past the 60-month moratorium and the letter alleges no fraud.'}</p>
+    </div>
+    <div><p class="small mute" style="margin:0">At stake</p><div class="big" style="font-size:clamp(44px,7vw,68px)">${inr(C.amount)}</div></div>
+  </div></div>
+  <div class="grid two">
+    <div><h2>Grounds for appeal</h2>
+      ${GROUNDS.map(g=>`<div class="ground"><h3>${lang==='ta'?`<span class="ta">${g.ta}</span>`:g.h}</h3><p class="small" style="margin:0">${g.b}</p>
+        <div class="chips">${g.c.map(k=>`<button class="chip" data-src="${k}"><b>${EX[k]}</b>${SRC[k].t.split(',')[0].split(' — ')[0]}</button>`).join('')}</div></div>`).join('')}
+      <p><a class="btn" href="#letter">Write my appeal letter</a></p>
+    </div>
+    <div class="card"><h2>Past Ombudsman decisions like yours</h2>
+      <p class="small mute">Same rejection reason (non-disclosure at proposal). Illustrative samples; the product links each to the published award.</p>
+      ${PREC.map(([d,o,k])=>`<div class="prec"><span>${d}</span><span class="tag ${k}">${o}</span></div>`).join('')}
+      <p class="small" style="margin-top:12px">The case that was dismissed was inside the moratorium. Yours is not.</p>
+    </div>
+  </div>`,
+letter: () => `
+  <div class="tabs" role="group" aria-label="Letter type">
+    <button aria-pressed="true">1. Grievance to insurer</button><button disabled>2. Bima Bharosa — unlocks if no fair reply</button><button disabled>3. Ombudsman complaint — unlocks after insurer's reply window</button>
+  </div>
+  <div class="grid two">
+    <div class="letter">
+      <p>To the Grievance Redressal Officer,<br>Suraksha General Insurance Ltd, Chennai</p>
+      <p><b>Subject: Grievance against repudiation of claim under Policy No. ${C.policy}, dated 02/09/2026</b></p>
+      <p>I write to contest the repudiation of my cashless claim of ${inr(C.amount)} for coronary angioplasty (14–19 August 2026), rejected under Clause 7.3 for alleged non-disclosure of hypertension.<sup>1</sup></p>
+      <p>First, my policy has been renewed continuously since 12 April 2019, a period of 88 months.<sup>2</sup> Under the IRDAI Master Circular on Health Insurance Business (29 May 2024), after sixty continuous months of coverage no claim is contestable on grounds of non-disclosure except established fraud.<sup>3</sup> Your own policy wording incorporates this moratorium.<sup>4</sup> Your letter does not allege fraud.</p>
+      <p>Second, your pre-policy health check on 9 April 2019 recorded normal blood pressure and accepted me at standard rates.<sup>5</sup></p>
+      <p>I request that you withdraw the repudiation and settle the claim in full within the timeline required by IRDAI, and provide a copy of the complete claim file and the documents relied on.</p>
+      <p>Yours faithfully,<br>Meena S.</p>
+      <p class="small" style="font-family:'IBM Plex Sans',sans-serif;color:#5b6366">Sources: 1 rejection letter, p.1; 2 renewal certificate; 3 IRDAI Master Circular 2024; 4 policy wording, p.14; 5 pre-policy check report</p>
+    </div>
+    <div class="card"><h2>Ready to send</h2>
+      <p class="ok">5 of 5 citations verified against their sources</p>
+      <p class="small mute">The download stays locked until every citation is verified.</p>
+      <p style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+        <button class="btn" id="pdf">Download PDF pack (letter + evidence pages)</button>
+        <button class="btn ghost" id="copy">Copy as email</button></p>
+      <p id="msg" class="small" hidden></p>
+      <p class="small mute">Tone: <b>Firm</b>. 3 drafts generated, this one scored best on citations and completeness.</p>
+    </div>
+  </div>`,
+track: () => `
+  <div class="grid two">
+    <div><h1>Your escalation plan</h1>
+      <p class="mute">Dates are worked out from the day you send the grievance. Add them to your calendar so nothing lapses.</p>
+      <ol class="rail">
+        <li class="done"><span class="date">2 Sep 2026</span> — Claim rejected<br><span class="small mute">Rejection letter received</span></li>
+        <li class="now"><span class="date">Today</span> — Send grievance to insurer<br><span class="small mute">Letter ready in the Letter tab</span></li>
+        <li><span class="date">+14 days</span> — Insurer's reply due<br><span class="small mute">Upload their reply here and ClaimBack re-checks it</span></li>
+        <li><span class="date">If no fair reply</span> — Escalate on IRDAI's Bima Bharosa portal<br><span class="small mute">Complaint text pre-filled</span></li>
+        <li><span class="date">Then</span> — Insurance Ombudsman complaint<br><span class="small mute">Pre-filled form; claims up to ₹50 lakh; free to file</span></li>
+      </ol>
+    </div>
+    <div class="card"><h2>What happens next</h2>
+      <p>Start with the insurer. If the reply is unfair or late, the Ombudsman is free to use and you don't need a lawyer.</p>
+      <button class="btn ghost" id="ics">Add dates to calendar</button>
+      <p id="msg2" class="small" hidden></p>
+      <p class="gate">Timelines follow the IRDAI grievance rules and Insurance Ombudsman Rules 2017 (as amended); they are confirmed against the official text before release.</p>
+    </div>
+  </div>`
+};
+
+const app = document.getElementById('app'), nav = document.getElementById('nav'), drawer = document.getElementById('drawer');
+let timer;
+function render(){
+  const id = (location.hash.slice(1) || 'home');
+  const cur = page[id] ? id : 'home';
+  nav.innerHTML = S.map(([k,l])=>`<a href="#${k}" ${k===cur?'aria-current="page"':''}>${l}</a>`).join('');
+  app.innerHTML = page[cur]();
+  drawer.hidden = true;
+  clearInterval(timer);
+  if (cur === 'analyse') {
+    const items = [...document.querySelectorAll('#trace li')]; let i = 0;
+    timer = setInterval(()=>{ if (i < items.length) items[i++].classList.add('in'); else { clearInterval(timer); document.getElementById('toV').hidden = false; } }, 420);
+  }
+  window.scrollTo(0,0);
+}
+document.addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (chip) { const s = SRC[chip.dataset.src];
+    drawer.innerHTML = `<button class="btn ghost" id="close" style="margin-bottom:16px">Close</button><p class="small mute">Source</p><h2>${esc(s.t)}</h2><div class="doc"><mark>${esc(s.q)}</mark></div>${s.p?'<p class="small mute" style="margin-top:12px">Paraphrased in this prototype. The product quotes the exact clause from the official circular and verifies it word for word.</p>':'<p class="ok" style="margin-top:12px">✓ Quote found word for word in the source</p>'}`;
+    drawer.hidden = false; return; }
+  if (e.target.id === 'close') { drawer.hidden = true; return; }
+  if (e.target.id === 'pdf' || e.target.id === 'copy') { const m = document.getElementById('msg'); m.hidden = false; m.textContent = 'In the full app this downloads the PDF pack or copies the email. This prototype shows the flow only.'; return; }
+  if (e.target.id === 'ics') { const m = document.getElementById('msg2'); m.hidden = false; m.textContent = 'In the full app this saves a calendar file with each deadline.'; return; }
+  const lb = e.target.closest('.lang button');
+  if (lb) { lang = lb.id === 'lang-ta' ? 'ta' : 'en';
+    document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', String(b === lb)));
+    if ((location.hash.slice(1)||'home') !== 'verdict') location.hash = 'verdict'; else render(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
+window.addEventListener('hashchange', render);
+render();
+}
+</script>

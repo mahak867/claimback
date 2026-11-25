@@ -1,7 +1,7 @@
 <title>ClaimBack Prototype</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Tamil:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Tamil:wght@400;500;600&family=IBM+Plex+Sans+Devanagari:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
 <style>
 /* VOICE everyday product, calm and exact, a legal-aid clerk who shows their working (direction per unslop + frontend-design)
    IDEA a case file: every claim on screen is pinned, like a court exhibit, to the page it came from
@@ -14,6 +14,12 @@
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
 .ta{font-family:"IBM Plex Sans Tamil","IBM Plex Sans",sans-serif}
+.hi{font-family:"IBM Plex Sans Devanagari","IBM Plex Sans",sans-serif}
+.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.drop label.pick{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.drop label.pick:hover{border-color:var(--teal)}
+.drop:focus-within{outline:2px solid var(--teal);outline-offset:2px}
+.btn[aria-disabled=true]{opacity:.45;pointer-events:none}
 .wrap{max-width:1180px;margin:0 auto;padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
 header{border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
 .bar{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
@@ -98,6 +104,7 @@ footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:
     <div class="lang" role="group" aria-label="Language">
       <button id="lang-en" aria-pressed="true">English</button>
       <button id="lang-ta" class="ta" aria-pressed="false">தமிழ்</button>
+      <button id="lang-hi" class="hi" aria-pressed="false">हिन्दी</button>
     </div>
   </div>
   <nav id="nav"></nav>
@@ -112,6 +119,13 @@ footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:
 {
 const S = [['home','Start'],['upload','Upload'],['analyse','Agent'],['verdict','Verdict'],['letter','Letter'],['track','Track']];
 let lang = 'en';
+const T = {
+  head: {en:'Strong case. Appeal this rejection', ta:'வலுவான வழக்கு. இந்த மறுப்பை எதிர்த்து மேல்முறையீடு செய்யுங்கள்', hi:'मज़बूत मामला। इस अस्वीकृति के ख़िलाफ़ अपील करें'},
+  sum: {en:'2 grounds found, every citation verified. Your policy is past the 60-month moratorium and the letter alleges no fraud.',
+        ta:'உங்கள் பாலிசி 88 மாதங்களாக தொடர்ந்து உள்ளது. 60 மாதங்களுக்குப் பிறகு, மோசடி நிரூபிக்கப்படாவிட்டால், தகவல் மறைப்பு காரணமாக காப்பீட்டு நிறுவனம் கோரிக்கையை மறுக்க முடியாது.',
+        hi:'आपकी पॉलिसी 88 महीनों से लगातार चल रही है। 60 महीनों के बाद, धोखाधड़ी साबित किए बिना, बीमा कंपनी जानकारी छिपाने के आधार पर दावा अस्वीकार नहीं कर सकती।'}
+};
+const files = {};
 const C = {name:'Meena S.', city:'Chennai', insurer:'Suraksha General Insurance Ltd (fictional)', policy:'SGI/HL/2019/448213', since:'12 Apr 2019', admit:'14 Aug 2026', diag:'Coronary angioplasty', amount:246500, rejected:'2 Sep 2026', months:88};
 const inr = n => '₹' + n.toLocaleString('en-IN');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
@@ -123,10 +137,11 @@ const SRC = {
   cert: {t:'Renewal certificate, page 1', q:'Policy continuously renewed without break since 12/04/2019. Cumulative bonus: 50%.'},
   med: {t:'Pre-policy health check, 9 Apr 2019', q:'BP 128/82. No abnormalities detected. Accepted at standard rates.'}
 };
+const DOCS = [['rej','Rejection letter',1],['pol','Policy wording',0],['bill','Hospital bill or discharge summary',0],['ren','Renewal certificate',0]];
 const EX = {rej:'E1', mor:'E2', pol:'E3', cert:'E4', med:'E5'};
 const GROUNDS = [
-  {h:'The moratorium protects this claim', ta:'60 மாத தொடர் காப்பீட்டுக்குப் பிறகு இந்த காரணத்தால் மறுக்க முடியாது', b:'Your policy has run for 88 continuous months. After 60 months, an insurer cannot reject a claim for non-disclosure unless it proves fraud. The letter does not allege fraud.', c:['mor','pol','cert']},
-  {h:'The insurer checked your health before issuing the policy', ta:'பாலிசி வழங்கும் முன் காப்பீட்டு நிறுவனமே உடல்நலப் பரிசோதனை செய்தது', b:'A pre-policy check in April 2019 recorded normal blood pressure and accepted you at standard rates. The "undisclosed hypertension" claim conflicts with the insurer\'s own record.', c:['med','rej']}
+  {h:'The moratorium protects this claim', ta:'60 மாத தொடர் காப்பீட்டுக்குப் பிறகு இந்த காரணத்தால் மறுக்க முடியாது', hi:'60 महीने के लगातार कवर के बाद इस आधार पर दावा अस्वीकार नहीं किया जा सकता', b:'Your policy has run for 88 continuous months. After 60 months, an insurer cannot reject a claim for non-disclosure unless it proves fraud. The letter does not allege fraud.', c:['mor','pol','cert']},
+  {h:'The insurer checked your health before issuing the policy', ta:'பாலிசி வழங்கும் முன் காப்பீட்டு நிறுவனமே உடல்நலப் பரிசோதனை செய்தது', hi:'पॉलिसी जारी करने से पहले बीमा कंपनी ने ख़ुद आपकी स्वास्थ्य जाँच की थी', b:'A pre-policy check in April 2019 recorded normal blood pressure and accepted you at standard rates. The "undisclosed hypertension" claim conflicts with the insurer\'s own record.', c:['med','rej']}
 ];
 const PREC = [
   ['Non-disclosure raised in policy year 6; moratorium applied', 'Allowed', 'won'],
@@ -178,12 +193,14 @@ upload: () => `
     <div>
       <h1>Add your documents</h1>
       <p class="mute">Only the rejection letter is required. Photos from your phone are fine.</p>
-      ${[['Rejection letter','SGI_repudiation_02Sep2026.pdf · 1 page'],['Policy wording','SGI_Family_Health_Wording.pdf · 32 pages'],['Hospital bill / discharge summary','Discharge_Summary_19Aug.pdf · 4 pages'],['Renewal certificate (optional)','Renewal_2026.jpg']].map(([t,f])=>`
-        <div class="drop done"><div class="thumb"></div><div style="flex:1"><b>${t}</b><div class="small mute">${f}</div></div><span class="ok">Read</span></div>`).join('')}
-      <p style="margin-top:16px"><a class="btn" href="#analyse">Check my case</a></p>
+      ${DOCS.map(([id,t,req])=>`
+        <div class="drop ${files[id]?'done':''}" style="position:relative"><div class="thumb"></div><div style="flex:1"><b>${t}</b><div class="small mute">${files[id]?esc(files[id]):(req?'Required. PDF, JPG or PNG':'Optional')}</div></div>
+          ${files[id]?'<span class="ok">Read</span>':`<label class="pick" for="f-${id}">Choose file</label><input type="file" id="f-${id}" data-doc="${id}" accept=".pdf,image/*">`}</div>`).join('')}
+      <p style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="#analyse" aria-disabled="${files.rej?'false':'true'}">Check my case</a><button class="btn ghost" id="usesample">Use the sample documents</button></p>
+      <p class="small mute">Files stay in your browser in this prototype; the analysis shown uses the sample case.</p>
     </div>
     <div class="card"><h2>What we pull out</h2>
-      <p class="small mute">Read automatically from the sample documents:</p>
+      <p class="small mute">Read automatically from the documents. Sample values shown:</p>
       ${[['Insurer',C.insurer],['Policy number',C.policy],['Covered since',C.since],['Admitted',C.admit],['Treatment',C.diag],['Claim amount',inr(C.amount)],['Rejected on',C.rejected]].map(([k,v])=>`<div class="prec"><span class="mute">${k}</span><b>${esc(v)}</b></div>`).join('')}
     </div>
   </div>`,
@@ -209,15 +226,15 @@ analyse: () => `
 verdict: () => `
   <div class="card" style="margin-bottom:24px"><div class="verdict">
     <div style="flex:1 1 320px"><p class="small mute" style="margin:0">Case strength</p>
-      <h1 style="margin:4px 0 0">Strong case. Appeal this rejection</h1>
+      <h1 class="${lang==='en'?'':lang}" style="margin:4px 0 0">${T.head[lang]}</h1>
       <div class="meter"><span class="on"></span><span class="on"></span><span class="on"></span></div>
-      <p class="${lang==='ta'?'ta':''}" style="margin:8px 0 0">${lang==='ta'?'உங்கள் பாலிசி 88 மாதங்களாக தொடர்ந்து உள்ளது. 60 மாதங்களுக்குப் பிறகு, மோசடி நிரூபிக்கப்படாவிட்டால், தகவல் மறைப்பு காரணமாக காப்பீட்டு நிறுவனம் கோரிக்கையை மறுக்க முடியாது.':'2 grounds found, every citation verified. Your policy is past the 60-month moratorium and the letter alleges no fraud.'}</p>
+      <p class="${lang==='en'?'':lang}" style="margin:8px 0 0">${T.sum[lang]}</p>
     </div>
     <div><p class="small mute" style="margin:0">At stake</p><div class="big" style="font-size:clamp(44px,7vw,68px)">${inr(C.amount)}</div></div>
   </div></div>
   <div class="grid two">
     <div><h2>Grounds for appeal</h2>
-      ${GROUNDS.map(g=>`<div class="ground"><h3>${lang==='ta'?`<span class="ta">${g.ta}</span>`:g.h}</h3><p class="small" style="margin:0">${g.b}</p>
+      ${GROUNDS.map(g=>`<div class="ground"><h3>${lang==='en'?g.h:`<span class="${lang}">${g[lang]}</span>`}</h3><p class="small" style="margin:0">${g.b}</p>
         <div class="chips">${g.c.map(k=>`<button class="chip" data-src="${k}"><b>${EX[k]}</b>${SRC[k].t.split(',')[0].split(' — ')[0]}</button>`).join('')}</div></div>`).join('')}
       <p><a class="btn" href="#letter">Write my appeal letter</a></p>
     </div>
@@ -294,12 +311,17 @@ document.addEventListener('click', e => {
     drawer.innerHTML = `<button class="btn ghost" id="close" style="margin-bottom:16px">Close</button><p class="small mute">Source</p><h2>${esc(s.t)}</h2><div class="doc"><mark>${esc(s.q)}</mark></div>${s.p?'<p class="small mute" style="margin-top:12px">Paraphrased in this prototype. The product quotes the exact clause from the official circular and verifies it word for word.</p>':'<p class="ok" style="margin-top:12px">✓ Quote found word for word in the source</p>'}`;
     drawer.hidden = false; return; }
   if (e.target.id === 'close') { drawer.hidden = true; return; }
+  if (e.target.id === 'usesample') { Object.assign(files, {rej:'SGI_repudiation_02Sep2026.pdf', pol:'SGI_Family_Health_Wording.pdf', bill:'Discharge_Summary_19Aug.pdf', ren:'Renewal_2026.jpg'}); render(); return; }
   if (e.target.id === 'pdf' || e.target.id === 'copy') { const m = document.getElementById('msg'); m.hidden = false; m.textContent = 'In the full app this downloads the PDF pack or copies the email. This prototype shows the flow only.'; return; }
   if (e.target.id === 'ics') { const m = document.getElementById('msg2'); m.hidden = false; m.textContent = 'In the full app this saves a calendar file with each deadline.'; return; }
   const lb = e.target.closest('.lang button');
-  if (lb) { lang = lb.id === 'lang-ta' ? 'ta' : 'en';
+  if (lb) { lang = lb.id.slice(5);
     document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', String(b === lb)));
     if ((location.hash.slice(1)||'home') !== 'verdict') location.hash = 'verdict'; else render(); }
+});
+document.addEventListener('change', e => {
+  const id = e.target.dataset && e.target.dataset.doc;
+  if (id && e.target.files[0]) { files[id] = e.target.files[0].name; render(); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
 window.addEventListener('hashchange', render);

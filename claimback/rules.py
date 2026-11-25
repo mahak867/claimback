@@ -51,6 +51,7 @@ class Ground:
     title: str
     explanation: str
     sources: list[str]
+    letter: str = ""  # first-person wording for the grievance letter
 
 
 def months_between(start: date, end: date) -> int:
@@ -79,6 +80,11 @@ def moratorium(case: Case) -> Ground | None:
             "and the rejection does not allege fraud."
         ),
         sources=[RULES["moratorium_months"]["source"], "policy renewal history"],
+        letter=(
+            f"My policy has been renewed without a break for {covered} months. After {limit} continuous "
+            "months of cover, no claim can be contested on grounds of non-disclosure except established "
+            "fraud, and your letter does not allege fraud."
+        ),
     )
 
 
@@ -100,6 +106,10 @@ def ped_wait_cap(case: Case) -> Ground | None:
             f"diseases, above the {cap}-month maximum, and you have been covered {covered} months."
         ),
         sources=[RULES["ped_max_wait_months"]["source"], "policy wording"],
+        letter=(
+            f"The policy applies a {case.ped_wait_months_in_policy}-month waiting period for pre-existing "
+            f"diseases, above the {cap}-month maximum permitted, and I have been covered for {covered} months."
+        ),
     )
 
 
@@ -112,6 +122,7 @@ def insurer_own_health_check(case: Case) -> Ground | None:
         title="The insurer checked your health before issuing the policy",
         explanation="The insurer's own pre-policy medical check recorded no abnormality for the condition now said to be concealed.",
         sources=["pre-policy medical report"],
+        letter="Your own pre-policy medical check recorded no abnormality and accepted me at standard rates.",
     )
 
 
@@ -124,6 +135,7 @@ def cashless_delay(case: Case) -> Ground | None:
         title="The cashless decision was late",
         explanation=f"The insurer took {case.cashless_decision_hours:g} hours to decide; the limit is {limit} hour.",
         sources=[RULES["cashless_decision_hours"]["source"], "hospital TPA correspondence"],
+        letter=f"The cashless decision took {case.cashless_decision_hours:g} hours against the {limit}-hour limit.",
     )
 
 

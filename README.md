@@ -1,8 +1,14 @@
 # ClaimBack
 
+[![tests](https://github.com/mahak867/claimback/actions/workflows/tests.yml/badge.svg)](https://github.com/mahak867/claimback/actions/workflows/tests.yml)
+
 An AI agent that fights rejected Indian health insurance claims. Upload the rejection letter; ClaimBack checks it against IRDAI rules and your own policy, shows how the Insurance Ombudsman ruled in cases like yours, and writes a cited appeal in English, Tamil or Hindi. Free for patients.
 
 Built for AI Vibeathon 2026 (DotRepo, powered by Adaption), **Open Innovation** track, by Mahak Fahad and Roshini R.
+
+![ClaimBack prototype: upload, agent steps, verdict with verified sources, Tamil and Hindi, appeal letter, deadline plan](docs/demo.gif)
+
+25-second walkthrough of the prototype: [docs/demo.mp4](docs/demo.mp4).
 
 ## Why
 
@@ -34,17 +40,22 @@ flowchart LR
 
 | Path | What it is | Status |
 | --- | --- | --- |
-| [`prototype/`](prototype/index.html) | Clickable prototype of all six screens on a fictional case | Done |
-| [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium, pre-existing-disease wait cap, insurer's own health check, cashless delay; case strength | Done, 9 tests passing |
+| [`prototype/`](prototype/index.html) | Clickable prototype of all six screens on a fictional case, in English, Tamil and Hindi | Done |
+| [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium, pre-existing-disease wait cap, insurer's own health check, cashless delay; case strength | Done, tested |
+| [`claimback/citations.py`](claimback/citations.py) | Citation verifier: a quote is shown only if found word for word in its source (OCR-tolerant) | Done, tested |
+| [`claimback/letter.py`](claimback/letter.py) | Grievance letter in the patient's voice; refuses to build while any citation is unverified | Done, tested |
+| [`claimback/deadlines.py`](claimback/deadlines.py) | Escalation ladder (insurer → Bima Bharosa → Ombudsman) and a calendar (.ics) export | Done, tested |
+| [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests:
+Run the tests (19, also run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q
+python -m claimback.demo
 ```
 
 Check a dataset exported from Adaption:

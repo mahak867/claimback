@@ -46,6 +46,10 @@ v2 came from the rewritten description in [adaption-dataset-v2.md](adaption-data
 
 ## Baselines on v2 (the numbers the model must beat)
 
+![Baseline chart](baselines.png)
+
+(Drawn by `tools/make_baseline_chart.py`; colours checked with a palette validator for colour-blind safety and contrast.)
+
 | Measure | v1 letters | v2 letters | What it shows |
 | --- | --- | --- | --- |
 | Rules: rejection reason | 79.6% | **47.6%** | Rules break as letters get realistic |

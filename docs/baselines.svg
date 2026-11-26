@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="330" viewBox="0 0 880 330" font-family="IBM Plex Sans, Inter, Arial, sans-serif" role="img" aria-label="Rules find the rejection reason in 80% of simple letters but 48% of realistic ones">
+<rect width="880" height="330" fill="#ffffff"/>
+<text x="24.0" y="34.0" font-size="15" fill="#191919" text-anchor="start" font-weight="600">Rules break on realistic letters: the reason is found in 80% of simple letters, 48% of realistic ones</text>
+<text x="24.0" y="56.0" font-size="12" fill="#666666" text-anchor="start" font-weight="400">Rule-based baseline, no model. v1: 401 simple synthetic letters. v2: 958 realistic ones. Target is for the fine-tuned model.</text>
+<circle cx="30" cy="82" r="6" fill="#84b9f3"/>
+<text x="42.0" y="86.0" font-size="12" fill="#666666" text-anchor="start" font-weight="400">v1 letters (simple)</text>
+<circle cx="182" cy="82" r="6" fill="#1757ac"/>
+<text x="194.0" y="86.0" font-size="12" fill="#666666" text-anchor="start" font-weight="400">v2 letters (realistic)</text>
+<line x1="250.0" x2="250.0" y1="104" y2="272" stroke="#e7e7e7" stroke-width="1"/>
+<text x="250.0" y="290.0" font-size="11.5" fill="#666666" text-anchor="middle" font-weight="400">0%</text>
+<line x1="397.5" x2="397.5" y1="104" y2="272" stroke="#e7e7e7" stroke-width="1"/>
+<text x="397.5" y="290.0" font-size="11.5" fill="#666666" text-anchor="middle" font-weight="400">25%</text>
+<line x1="545.0" x2="545.0" y1="104" y2="272" stroke="#e7e7e7" stroke-width="1"/>
+<text x="545.0" y="290.0" font-size="11.5" fill="#666666" text-anchor="middle" font-weight="400">50%</text>
+<line x1="692.5" x2="692.5" y1="104" y2="272" stroke="#e7e7e7" stroke-width="1"/>
+<text x="692.5" y="290.0" font-size="11.5" fill="#666666" text-anchor="middle" font-weight="400">75%</text>
+<line x1="840.0" x2="840.0" y1="104" y2="272" stroke="#e7e7e7" stroke-width="1"/>
+<text x="840.0" y="290.0" font-size="11.5" fill="#666666" text-anchor="middle" font-weight="400">100%</text>
+<line x1="250" x2="840" y1="272" y2="272" stroke="#c2c2c2" stroke-width="1"/>
+<line x1="781.0" x2="781.0" y1="104" y2="272" stroke="#666666" stroke-width="1.5" stroke-dasharray="4 4"/>
+<text x="775.0" y="230.0" font-size="11.5" fill="#666666" text-anchor="end" font-weight="400">model target 90%</text>
+<text x="24.0" y="132.5" font-size="13" fill="#191919" text-anchor="start" font-weight="400">Rejection reason identified</text>
+<line x1="719.6" x2="530.8" y1="128" y2="128" stroke="#c2c2c2" stroke-width="2"/>
+<circle cx="719.6" cy="128" r="7" fill="#84b9f3" stroke="#ffffff" stroke-width="2"/>
+<circle cx="530.8" cy="128" r="7" fill="#1757ac" stroke="#ffffff" stroke-width="2"/>
+<text x="517.8" y="132.5" font-size="12" fill="#191919" text-anchor="end" font-weight="400">47.6%</text>
+<text x="732.6" y="132.5" font-size="12" fill="#191919" text-anchor="start" font-weight="400">79.6%</text>
+<text x="24.0" y="190.5" font-size="13" fill="#191919" text-anchor="start" font-weight="400">All 11 fields, mean</text>
+<line x1="630.5" x2="703.7" y1="186" y2="186" stroke="#c2c2c2" stroke-width="2"/>
+<circle cx="630.5" cy="186" r="7" fill="#84b9f3" stroke="#ffffff" stroke-width="2"/>
+<circle cx="703.7" cy="186" r="7" fill="#1757ac" stroke="#ffffff" stroke-width="2"/>
+<text x="617.5" y="190.5" font-size="12" fill="#191919" text-anchor="end" font-weight="400">64.5%</text>
+<text x="716.7" y="190.5" font-size="12" fill="#191919" text-anchor="start" font-weight="400">76.9%</text>
+<text x="24.0" y="248.5" font-size="13" fill="#191919" text-anchor="start" font-weight="400">Exact reason sentence found</text>
+<line x1="295.4" x2="297.2" y1="244" y2="244" stroke="#c2c2c2" stroke-width="2"/>
+<circle cx="295.4" cy="244" r="7" fill="#84b9f3" stroke="#ffffff" stroke-width="2"/>
+<circle cx="297.2" cy="244" r="7" fill="#1757ac" stroke="#ffffff" stroke-width="2"/>
+<text x="311.2" y="248.5" font-size="12" fill="#191919" text-anchor="start" font-weight="400">7.7% → 8.0%</text>
+</svg>

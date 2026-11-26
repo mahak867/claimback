@@ -84,6 +84,8 @@ python tools/validate_dataset.py path/to/export.jsonl
 
 ## Results so far
 
+![Rules break on realistic letters: the reason is found in 80% of simple letters, 48% of realistic ones; the exact reason sentence in only 8%](docs/baselines.png)
+
 See [docs/results.md](docs/results.md). A keyword baseline scores 0.89 macro-F1 on our synthetic letters but only 0.54 on real Ombudsman awards (Alei), so the target for the fine-tuned model is to beat 0.70 on real awards. Dataset v1 was 37% clean; the v2 description fixing its defects is in [docs/adaption-dataset-v2.md](docs/adaption-dataset-v2.md).
 
 ## Rule sources

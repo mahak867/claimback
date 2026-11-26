@@ -1,0 +1,30 @@
+{
+  "platform": "Adaption AutoScientist (Tiny AutoScientist, models below 10B parameters)",
+  "dataset": "indian_health_claim_rejection (v2, 1,000 rows; 958 pass tools/validate_dataset.py)",
+  "augmentation": {"same_domain_rows": 0, "other_domain_rows": 0},
+  "hardware": {"training": "1x NVIDIA H100 80GB", "eval": "1x NVIDIA H100 80GB"},
+  "config": {
+    "model": "Qwen/Qwen3.5-4B",
+    "hyperparams": {
+      "base_model_size": "4B",
+      "n_epochs": 2,
+      "batch_size": "max",
+      "learning_rate": 0.00005,
+      "lora": true,
+      "lora_r": 32,
+      "lora_alpha": 64,
+      "lora_dropout": 0,
+      "lora_trainable_modules": "k_proj,up_proj,o_proj,q_proj,down_proj,v_proj,gate_proj",
+      "lr_scheduler_type": "cosine",
+      "min_lr_ratio": 0.1,
+      "scheduler_num_cycles": 0.5,
+      "warmup_ratio": 0.05,
+      "max_grad_norm": 1,
+      "weight_decay": 0.02,
+      "n_evals": 5,
+      "training_method": "sft",
+      "train_on_inputs": false
+    }
+  },
+  "held_out_test": "the 401 usable v1 letters, never used in training (tools/validate_dataset.py on v1)"
+}

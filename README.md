@@ -42,7 +42,7 @@ flowchart LR
 
 - **Rules in code, not in the model.** Legal limits live in [`claimback/rules.py`](claimback/rules.py), each tied to its source document and unit-tested.
 - **Verified citations.** A letter cannot be downloaded while any citation is unverified.
-- **Our own open model.** An open-weight model fine-tuned on Adaption with IRDAI regulations and Ombudsman decisions, exportable and self-hostable, so patient documents need not leave our servers.
+- **Our own open model.** Qwen3.5-4B (open-weight), fine-tuned with LoRA on Adaption's AutoScientist using our dataset ([training run 1](docs/training-run-1.json)). At 4B parameters it runs on a single GPU, so patient documents need not leave our servers. Evaluation plan: [docs/evaluate-model.md](docs/evaluate-model.md).
 
 ## What is in this repo
 
@@ -59,7 +59,7 @@ flowchart LR
 | [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
-| Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
+| Model fine-tuning on Adaption | Dataset v2 (96% usable); run 1: Qwen3.5-4B, LoRA, 2 epochs on an H100 | Training |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
 Run the tests (38 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:

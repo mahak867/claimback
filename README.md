@@ -62,7 +62,7 @@ flowchart LR
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests (37 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
+Run the tests (38 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q

@@ -87,6 +87,20 @@ async function audit(page, label, failures) {
   assert.ok((await page.textContent('main')).includes('does not cite the policy terms'));
   await audit(page, 'checker/results', failures);
 
+  // PDF upload: a PDF made in the browser is read with pdf.js (CDN served from the npm copy) and analysed.
+  const pdfDir = path.dirname(require.resolve('pdfjs-dist/build/pdf.min.js'));
+  await page.route('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/*', r =>
+    r.fulfill({ path: path.join(pdfDir, path.basename(new URL(r.request().url()).pathname)), contentType: 'application/javascript' }));
+  const maker = await browser.newPage();
+  await maker.setContent('<p>Dear Sir,</p><p>Your claim for Rs. 62,000 is rejected as the documents requested have not been submitted. Hence the claim is closed under Clause 9.1.</p>');
+  const pdf = await maker.pdf();
+  await maker.close();
+  await page.setInputFiles('#trypdf', { name: 'rejection.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await page.waitForFunction(() => document.getElementById('trytext').value.includes('Clause 9.1'), null, { timeout: 15000 });
+  assert.ok((await page.textContent('#trypdfmsg')).startsWith('Read rejection.pdf'));
+  await page.click('#tryform button[type=submit]');
+  assert.ok((await page.textContent('main')).includes('The insurer must collect the documents itself'));
+
   await browser.close();
   if (failures.length) {
     console.error('Accessibility violations (serious/critical):\n' + failures.join('\n'));

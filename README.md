@@ -10,6 +10,14 @@ Built for AI Vibeathon 2026 (DotRepo, powered by Adaption), **Open Innovation** 
 
 **Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 34-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
 
+## For judges: try it in 60 seconds
+
+1. Open **[claimback-eight.vercel.app](https://claimback-eight.vercel.app)** and press **Check my rejection**.
+2. Press **Fill in an example**, then **Check this letter**: the reason, the exact sentence and clause the insurer relied on, and every IRDAI rule that applies, each with its clause number.
+3. Paste any real rejection letter, or upload the insurer's PDF. It is analysed in your browser; nothing is uploaded.
+4. Press **Draft my grievance letter**.
+5. Open **Verdict** and switch between the three sample cases and English, தமிழ் and हिन्दी.
+
 ## Why
 
 - Indian insurers disallowed or rejected about ₹26,038 crore of health claims in FY24, and about 1 in 12 health claims in FY25.
@@ -64,7 +72,7 @@ python -m claimback.demo
 Browser and accessibility tests:
 
 ```bash
-npm i --no-save playwright@1.63.0 axe-core@4.10.2 && npx playwright install chromium
+npm i --no-save playwright@1.63.0 axe-core@4.10.2 pdfjs-dist@3.11.174 && npx playwright install chromium
 node tests/e2e/prototype.e2e.cjs
 ```
 

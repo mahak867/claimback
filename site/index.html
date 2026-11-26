@@ -260,7 +260,24 @@ const CASES = [
   ready: '<p class="ok">3 of 3 citations verified against their sources</p><p class="small" style="color:var(--amber)">Add your doctor\'s certificate before you send: the letter refers to it.</p>'
 }
 ];
-const TRY = {text:'', start:'', cont:true, res:null};
+const TRY = {text:'', start:'', cont:true, res:null, pdfMsg:''};
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+function loadPdfJs(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+    sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+    sc.onerror = () => fail(new Error('reader')); document.head.appendChild(sc); });
+}
+async function pdfToText(file){
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({data: await file.arrayBuffer()}).promise;
+  const pages = [];
+  for (let i = 1; i <= Math.min(doc.numPages, 10); i++) {
+    const c = await (await doc.getPage(i)).getTextContent();
+    pages.push(c.items.map(it => it.str + (it.hasEOL ? '\n' : ' ')).join('').replace(/[ \t]+\n/g, '\n'));
+  }
+  return pages.join('\n').trim();
+}
 const GROUND_KW = [
   ['fraud_misrepresentation', /fraud|forged|fabricat|manipulat|misrepresent/],
   ['policy_not_in_force', /lapse|not in force|grace period|premium (was )?not paid|non-payment/],
@@ -378,6 +395,7 @@ try: () => { const r = TRY.res; return `
       <h1>Check your own rejection letter</h1>
       <p class="mute">Paste the text of the insurer's letter. It is checked in your browser against confirmed IRDAI rules; nothing is uploaded.</p>
       <form id="tryform">
+        <p class="small" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 10px;position:relative"><label class="pick" for="trypdf" style="border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer">Upload the PDF from your insurer</label><input type="file" id="trypdf" accept="application/pdf" style="position:absolute;width:1px;height:1px;opacity:0"><span id="trypdfmsg" class="mute">${esc(TRY.pdfMsg || 'or paste the text below')}</span></p>
         <label for="trytext" class="small"><b>Rejection letter text</b></label>
         <textarea id="trytext" rows="10" style="width:100%;font:15px/1.5 'IBM Plex Sans',sans-serif;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin:6px 0 12px">${esc(TRY.text)}</textarea>
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
@@ -550,7 +568,18 @@ document.addEventListener('submit', e => {
   TRY.res = TRY.text.trim() ? analyseLetter(TRY.text, TRY.start, TRY.cont) : null;
   render();
 });
-document.addEventListener('change', e => {
+document.addEventListener('change', async e => {
+  if (e.target.id === 'trypdf' && e.target.files[0]) {
+    TRY.start = document.getElementById('trystart').value; TRY.cont = document.getElementById('trycont').checked;
+    const name = e.target.files[0].name;
+    document.getElementById('trypdfmsg').textContent = 'Reading ' + name + '…';
+    try {
+      const text = await pdfToText(e.target.files[0]);
+      if (text.replace(/\s/g,'').length < 40) { TRY.pdfMsg = name + ' has no readable text (it is a scan). Copy the text with your phone\'s text-from-photo feature and paste it below.'; }
+      else { TRY.text = text; TRY.pdfMsg = 'Read ' + name + '. Check the text, then press Check this letter.'; TRY.res = null; }
+    } catch (err) { TRY.pdfMsg = 'Could not read ' + name + '. Paste the text below instead.'; }
+    render(); return;
+  }
   const id = e.target.dataset && e.target.dataset.doc;
   if (id && e.target.files[0]) { files[id] = e.target.files[0].name; render(); }
 });

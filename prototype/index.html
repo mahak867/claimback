@@ -100,7 +100,7 @@ footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:
 <header><div class="wrap">
   <div class="bar">
     <div class="logo"><i>₹</i>ClaimBack</div>
-    <span class="sample">Prototype with a fictional case</span>
+    <span class="sample">Prototype with fictional cases</span>
     <div class="lang" role="group" aria-label="Language">
       <button id="lang-en" aria-pressed="true">English</button>
       <button id="lang-ta" class="ta" aria-pressed="false">தமிழ்</button>
@@ -113,53 +113,148 @@ footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:
 <main class="wrap" id="app"></main>
 <div id="drawer" class="drawer" hidden></div>
 
-<footer><div class="wrap">ClaimBack is a hackathon prototype by Mahak Fahad and Roshini R. The case, people, insurer and decisions shown are fictional samples. Not legal advice. Check before you send.</div></footer>
+<footer><div class="wrap">ClaimBack is a hackathon prototype by Mahak Fahad and Roshini R. The cases, people and insurers are fictional. The Ombudsman awards in case 1 are real, published and redacted (via the open Alei dataset). Not legal advice. Check before you send.</div></footer>
 
 <script>
 {
 const S = [['home','Start'],['upload','Upload'],['analyse','Agent'],['verdict','Verdict'],['letter','Letter'],['track','Track']];
 let lang = 'en';
-const T = {
+const files = {};
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const DOCS = [['rej','Rejection letter',1],['pol','Policy wording',0],['bill','Hospital bill or discharge summary',0],['ren','Renewal certificate',0]];
+const REAL_PREC_NOTE = 'Real published Ombudsman awards on the same reason (life insurance), from the open Alei dataset. The full product searches 3,831 rejection awards.';
+const NO_PREC_NOTE = 'No award in our sample set for this reason yet. The full product searches 3,831 published rejection awards.';
+const CASES = [
+{
+  label: 'Non-disclosure',
+  C: {name:'Meena S.', insurer:'Suraksha General Insurance Ltd (fictional)', short:'SURAKSHA GENERAL INSURANCE LTD', city:'Chennai', policy:'SGI/HL/2019/448213', since:'12 Apr 2019', admit:'14 Aug 2026', range:'14/08/2026 to 19/08/2026', diag:'Coronary angioplasty', amount:246500, rejected:'2 Sep 2026', rejNum:'02/09/2026'},
+  files: {rej:'SGI_repudiation_02Sep2026.pdf', pol:'SGI_Family_Health_Wording.pdf', bill:'Discharge_Summary_19Aug.pdf', ren:'Renewal_2026.jpg'},
+  reason: 'Your claim stands repudiated under <mark class="t">Clause 7.3 (Non-disclosure of material facts)</mark> as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.',
+  src: {
+    rej: {e:'E1', t:'Rejection letter, page 1', q:'Your claim stands repudiated under Clause 7.3 (Non-disclosure of material facts) as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.'},
+    mor: {e:'E2', p:1, t:'IRDAI Master Circular on Health Insurance Business, 29 May 2024, moratorium', q:'After completion of sixty continuous months of coverage, no policy and claim shall be contestable on grounds of non-disclosure or misrepresentation, except on grounds of established fraud.'},
+    pol: {e:'E3', t:'Your policy wording, page 14, Clause 7.3', q:'… subject to the moratorium period of 60 months of continuous coverage as stipulated by the Authority.'},
+    cert: {e:'E4', t:'Renewal certificate, page 1', q:'Policy continuously renewed without break since 12/04/2019. Cumulative bonus: 50%.'},
+    med: {e:'E5', t:'Pre-policy health check, 9 Apr 2019', q:'BP 128/82. No abnormalities detected. Accepted at standard rates.'}
+  },
+  grounds: [
+    {h:'The moratorium protects this claim', ta:'60 மாத தொடர் காப்பீட்டுக்குப் பிறகு இந்த காரணத்தால் மறுக்க முடியாது', hi:'60 महीने के लगातार कवर के बाद इस आधार पर दावा अस्वीकार नहीं किया जा सकता', b:'Your policy has run for 88 continuous months. After 60 months, an insurer cannot reject a claim for non-disclosure unless it proves fraud. The letter does not allege fraud.', c:['mor','pol','cert']},
+    {h:'The insurer checked your health before issuing the policy', ta:'பாலிசி வழங்கும் முன் காப்பீட்டு நிறுவனமே உடல்நலப் பரிசோதனை செய்தது', hi:'पॉलिसी जारी करने से पहले बीमा कंपनी ने ख़ुद आपकी स्वास्थ्य जाँच की थी', b:'A pre-policy check in April 2019 recorded normal blood pressure and accepted you at standard rates. The "undisclosed hypertension" claim conflicts with the insurer\'s own record.', c:['med','rej']}
+  ],
+  strength: 3,
   head: {en:'Strong case. Appeal this rejection', ta:'வலுவான வழக்கு. இந்த மறுப்பை எதிர்த்து மேல்முறையீடு செய்யுங்கள்', hi:'मज़बूत मामला। इस अस्वीकृति के ख़िलाफ़ अपील करें'},
   sum: {en:'2 grounds found, every citation verified. Your policy is past the 60-month moratorium and the letter alleges no fraud.',
         ta:'உங்கள் பாலிசி 88 மாதங்களாக தொடர்ந்து உள்ளது. 60 மாதங்களுக்குப் பிறகு, மோசடி நிரூபிக்கப்படாவிட்டால், தகவல் மறைப்பு காரணமாக காப்பீட்டு நிறுவனம் கோரிக்கையை மறுக்க முடியாது.',
-        hi:'आपकी पॉलिसी 88 महीनों से लगातार चल रही है। 60 महीनों के बाद, धोखाधड़ी साबित किए बिना, बीमा कंपनी जानकारी छिपाने के आधार पर दावा अस्वीकार नहीं कर सकती।'}
-};
-const files = {};
-const C = {name:'Meena S.', city:'Chennai', insurer:'Suraksha General Insurance Ltd (fictional)', policy:'SGI/HL/2019/448213', since:'12 Apr 2019', admit:'14 Aug 2026', diag:'Coronary angioplasty', amount:246500, rejected:'2 Sep 2026', months:88};
-const inr = n => '₹' + n.toLocaleString('en-IN');
-const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-
-const SRC = {
-  rej: {t:'Rejection letter, page 1', q:'Your claim stands repudiated under Clause 7.3 (Non-disclosure of material facts) as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.'},
-  mor: {p:1, t:'IRDAI Master Circular on Health Insurance Business, 29 May 2024 — moratorium', q:'After completion of sixty continuous months of coverage, no policy and claim shall be contestable on grounds of non-disclosure or misrepresentation, except on grounds of established fraud.'},
-  pol: {t:'Your policy wording, page 14, Clause 7.3', q:'… subject to the moratorium period of 60 months of continuous coverage as stipulated by the Authority.'},
-  cert: {t:'Renewal certificate, page 1', q:'Policy continuously renewed without break since 12/04/2019. Cumulative bonus: 50%.'},
-  med: {t:'Pre-policy health check, 9 Apr 2019', q:'BP 128/82. No abnormalities detected. Accepted at standard rates.'}
-};
-const DOCS = [['rej','Rejection letter',1],['pol','Policy wording',0],['bill','Hospital bill or discharge summary',0],['ren','Renewal certificate',0]];
-const EX = {rej:'E1', mor:'E2', pol:'E3', cert:'E4', med:'E5'};
-const GROUNDS = [
-  {h:'The moratorium protects this claim', ta:'60 மாத தொடர் காப்பீட்டுக்குப் பிறகு இந்த காரணத்தால் மறுக்க முடியாது', hi:'60 महीने के लगातार कवर के बाद इस आधार पर दावा अस्वीकार नहीं किया जा सकता', b:'Your policy has run for 88 continuous months. After 60 months, an insurer cannot reject a claim for non-disclosure unless it proves fraud. The letter does not allege fraud.', c:['mor','pol','cert']},
-  {h:'The insurer checked your health before issuing the policy', ta:'பாலிசி வழங்கும் முன் காப்பீட்டு நிறுவனமே உடல்நலப் பரிசோதனை செய்தது', hi:'पॉलिसी जारी करने से पहले बीमा कंपनी ने ख़ुद आपकी स्वास्थ्य जाँच की थी', b:'A pre-policy check in April 2019 recorded normal blood pressure and accepted you at standard rates. The "undisclosed hypertension" claim conflicts with the insurer\'s own record.', c:['med','rej']}
+        hi:'आपकी पॉलिसी 88 महीनों से लगातार चल रही है। 60 महीनों के बाद, धोखाधड़ी साबित किए बिना, बीमा कंपनी जानकारी छिपाने के आधार पर दावा अस्वीकार नहीं कर सकती।'},
+  prec: [
+    ['LIC, Delhi (LI/BK-10/05-06): the insurer had medically examined the policyholder, but hospital records showed a two-year illness before the policy', 'Dismissed', 'lost'],
+    ['LIC, Kochi (IO/KCH/LI/21-001-675/2011-12): the insurer could not prove suppression of facts; paid with 9% interest', 'Allowed', 'won']
+  ],
+  precNote: REAL_PREC_NOTE,
+  precTip: 'Your 2019 health check helps, but bring your own medical records too: in the Delhi case, hospital notes outweighed the insurer\'s examination.',
+  trace: [
+    ['Reading rejection letter', 'Found: repudiated under Clause 7.3, non-disclosure of hypertension', 0],
+    ['Reading policy wording (32 pages)', 'Clause 7.3 found on page 14; it refers to a 60-month moratorium', 0],
+    ['Reading renewal certificate', 'Continuous cover since 12 Apr 2019 → 88 months at admission', 0],
+    ['Classifying rejection reason', 'Non-disclosure at proposal (category G1)', 0],
+    ['Rules engine: moratorium check', '88 ≥ 60 months, no fraud alleged, sum insured unchanged → ground found', 0],
+    ['Searching IRDAI regulations', 'Best match: Master Circular 2024, moratorium', 0],
+    ['Checking pre-policy medical record', 'BP normal in 2019 → conflicts with the rejection reason', 0],
+    ['Finding similar Ombudsman decisions', '2 published awards on non-disclosure', 0],
+    ['Verifying every citation word for word', '5 of 5 quotes found in their sources', 0]
+  ],
+  letter: [
+    'I write to contest the repudiation of my cashless claim of ₹2,46,500 for coronary angioplasty (14–19 August 2026), rejected under Clause 7.3 for alleged non-disclosure of hypertension.<sup>1</sup>',
+    'First, my policy has been renewed continuously since 12 April 2019, a period of 88 months.<sup>2</sup> Under the IRDAI Master Circular on Health Insurance Business (29 May 2024), after sixty continuous months of coverage no claim is contestable on grounds of non-disclosure except established fraud.<sup>3</sup> Your own policy wording incorporates this moratorium.<sup>4</sup> Your letter does not allege fraud.',
+    'Second, your pre-policy health check on 9 April 2019 recorded normal blood pressure and accepted me at standard rates.<sup>5</sup>'
+  ],
+  sources: '1 rejection letter, p.1; 2 renewal certificate; 3 IRDAI Master Circular 2024; 4 policy wording, p.14; 5 pre-policy check report',
+  ready: '<p class="ok">5 of 5 citations verified against their sources</p>'
+},
+{
+  label: 'Waiting period',
+  C: {name:'Ravi K.', insurer:'Kaveri Health Insurance (fictional)', short:'KAVERI HEALTH INSURANCE', city:'Madurai', policy:'KHI/MDU/2023/77104', since:'1 Jan 2023', admit:'10 Jun 2026', range:'10/06/2026 to 16/06/2026', diag:'Diabetic foot ulcer surgery', amount:138000, rejected:'24 Jun 2026', rejNum:'24/06/2026'},
+  files: {rej:'KHI_claim_decision_24Jun2026.pdf', pol:'KHI_Policy_Wording.pdf', bill:'Final_Bill_16Jun.pdf', ren:'Renewal_Schedule_2026.pdf'},
+  reason: 'The claim is not admissible as Diabetes Mellitus is a pre-existing disease and the <mark class="t">48-month waiting period under Clause 4.2</mark> of the policy has not been completed.',
+  src: {
+    rej: {e:'E1', t:'Claim decision letter, page 1', q:'The claim is not admissible as Diabetes Mellitus is a pre-existing disease and the 48-month waiting period under Clause 4.2 of the policy has not been completed.'},
+    cap: {e:'E2', p:1, t:'IRDAI rules on waiting periods for pre-existing diseases (Insurance Products Regulations 2024)', q:'The maximum waiting period for pre-existing diseases shall not be more than 36 months of continuous coverage.'},
+    pol: {e:'E3', t:'Your policy wording, page 9, Clause 4.2', q:'Pre-existing diseases shall be covered after 48 months of continuous coverage.'},
+    cert: {e:'E4', t:'Renewal schedule, page 1', q:'Policy continuously renewed without break since 01/01/2023.'}
+  },
+  grounds: [
+    {h:'The waiting period applied is longer than allowed', ta:'விதிக்கப்பட்ட காத்திருப்பு காலம் அனுமதிக்கப்பட்டதை விட அதிகம்', hi:'लगाई गई प्रतीक्षा अवधि अनुमत सीमा से अधिक है', b:'Your policy applies a 48-month waiting period for pre-existing diseases, above the 36-month maximum IRDAI allows, and you have been covered for 41 continuous months.', c:['cap','pol','cert','rej']}
+  ],
+  strength: 3,
+  head: {en:'Strong case. Appeal this rejection', ta:'வலுவான வழக்கு. இந்த மறுப்பை எதிர்த்து மேல்முறையீடு செய்யுங்கள்', hi:'मज़बूत मामला। इस अस्वीकृति के ख़िलाफ़ अपील करें'},
+  sum: {en:'1 ground found, every citation verified. The policy\'s 48-month waiting period is above the 36-month maximum, and you have been covered for 41 months.',
+        ta:'பாலிசி 48 மாத காத்திருப்பு காலத்தை விதிக்கிறது; அதிகபட்ச வரம்பு 36 மாதங்கள். நீங்கள் 41 மாதங்களாக காப்பீட்டில் உள்ளீர்கள்.',
+        hi:'पॉलिसी 48 महीने की प्रतीक्षा अवधि लगाती है, जबकि अधिकतम सीमा 36 महीने है। आप 41 महीनों से कवर हैं।'},
+  prec: [],
+  precNote: NO_PREC_NOTE,
+  precTip: '',
+  trace: [
+    ['Reading claim decision letter', 'Found: not admissible under Clause 4.2, pre-existing disease waiting period', 0],
+    ['Reading policy wording (28 pages)', 'Clause 4.2 on page 9: 48-month waiting period for pre-existing diseases', 0],
+    ['Reading renewal schedule', 'Continuous cover since 1 Jan 2023 → 41 months at admission', 0],
+    ['Classifying rejection reason', 'Waiting period (category G8)', 0],
+    ['Rules engine: waiting-period cap', 'Policy applies 48 months > 36-month maximum; covered 41 ≥ 36 → ground found', 0],
+    ['Searching IRDAI regulations', 'Best match: Insurance Products Regulations 2024, waiting-period cap', 0],
+    ['Finding similar Ombudsman decisions', 'None in the sample set for this reason', 1],
+    ['Verifying every citation word for word', '4 of 4 quotes found in their sources', 0]
+  ],
+  letter: [
+    'I write to contest the rejection of my claim of ₹1,38,000 for diabetic foot ulcer surgery (10–16 June 2026), declined under Clause 4.2 because the 48-month waiting period for pre-existing diseases had not been completed.<sup>1</sup>',
+    'IRDAI\'s rules cap the waiting period for pre-existing diseases at 36 months of continuous coverage.<sup>2</sup> Your policy wording applies 48 months,<sup>3</sup> and my policy has been renewed without a break since 1 January 2023, 41 months before my admission.<sup>4</sup> The waiting period permitted by the regulator had therefore ended.'
+  ],
+  sources: '1 claim decision letter, p.1; 2 IRDAI rules on pre-existing disease waiting periods; 3 policy wording, p.9; 4 renewal schedule',
+  ready: '<p class="ok">4 of 4 citations verified against their sources</p>'
+},
+{
+  label: 'Not medically necessary',
+  C: {name:'Farhan A.', insurer:'Nilgiri Health Co. (fictional)', short:'NILGIRI HEALTH CO.', city:'Coimbatore', policy:'NHC/CBE/2024/30981', since:'5 Feb 2024', admit:'3 Sep 2026', range:'03/09/2026 to 05/09/2026', diag:'Dengue fever with low platelets', amount:42000, rejected:'15 Sep 2026', rejNum:'15/09/2026'},
+  files: {rej:'NHC_rejection_15Sep2026.pdf', pol:'NHC_Policy.pdf', bill:'Discharge_Summary_05Sep.pdf', ren:'Admission_Notes_03Sep.jpg'},
+  reason: 'The claim is not payable as <mark class="t">the hospitalisation was not medically necessary</mark> and the treatment could have been taken on an OPD basis.',
+  src: {
+    rej: {e:'E1', t:'Rejection letter, page 1', q:'The claim is not payable as the hospitalisation was not medically necessary and the treatment could have been taken on an OPD basis.'},
+    notes: {e:'E2', t:'Doctor\'s admission notes, 3 Sep 2026', q:'Platelet count 85,000. Admitted for monitoring and IV fluids.'},
+    disch: {e:'E3', t:'Discharge summary, page 1', q:'Patient admitted for 2 days for observation and supportive care.'}
+  },
+  grounds: [
+    {h:'Your doctor\'s notes support the admission', ta:'உங்கள் மருத்துவரின் குறிப்புகள் மருத்துவமனை அனுமதியை ஆதரிக்கின்றன', hi:'आपके डॉक्टर के नोट भर्ती का समर्थन करते हैं', b:'Your treating doctor recorded a platelet count of 85,000 and admitted you for monitoring and IV fluids. No IRDAI rule is clearly broken here, so the appeal rests on medical evidence: ask your doctor for a short certificate explaining why admission was needed.', c:['notes','disch','rej']}
+  ],
+  strength: 2,
+  head: {en:'Fair case. Appeal with your doctor\'s support', ta:'நியாயமான வழக்கு. உங்கள் மருத்துவரின் ஆதரவுடன் மேல்முறையீடு செய்யுங்கள்', hi:'ठीक-ठाक मामला। अपने डॉक्टर के समर्थन से अपील करें'},
+  sum: {en:'No rule is clearly broken. Your doctor\'s notes record a platelet count of 85,000, which supports admission. Get a doctor\'s certificate before you send the appeal.',
+        ta:'எந்த விதியும் தெளிவாக மீறப்படவில்லை. உங்கள் மருத்துவர் குறிப்பில் பிளேட்லெட் எண்ணிக்கை 85,000 எனப் பதிவாகியுள்ளது; இது மருத்துவமனை அனுமதியை ஆதரிக்கிறது.',
+        hi:'कोई नियम स्पष्ट रूप से नहीं टूटा। आपके डॉक्टर के नोट में प्लेटलेट गिनती 85,000 दर्ज है, जो भर्ती को सही ठहराती है।'},
+  prec: [],
+  precNote: NO_PREC_NOTE,
+  precTip: '',
+  trace: [
+    ['Reading rejection letter', 'Found: not payable, hospitalisation not medically necessary', 0],
+    ['Reading discharge summary', '2-day admission for dengue, observation and supportive care', 0],
+    ['Reading admission notes', 'Platelet count 85,000; IV fluids', 0],
+    ['Classifying rejection reason', 'Hospitalisation not justified (category G9)', 0],
+    ['Rules engine', 'No rule clearly broken: this appeal rests on evidence', 1],
+    ['Checking medical evidence', 'Doctor\'s notes support admission', 0],
+    ['Finding similar Ombudsman decisions', 'None in the sample set for this reason', 1],
+    ['Verifying every citation word for word', '3 of 3 quotes found in their sources', 0],
+    ['One thing missing', 'A certificate from your treating doctor (answered: not yet)', 1]
+  ],
+  letter: [
+    'I write to contest the rejection of my claim of ₹42,000 for treatment of dengue fever (3–5 September 2026), declined as not medically necessary.<sup>1</sup>',
+    'My treating doctor recorded a platelet count of 85,000 and admitted me for monitoring and intravenous fluids,<sup>2</sup> and the discharge summary confirms a two-day admission for observation and supportive care.<sup>3</sup> I enclose a certificate from my treating doctor explaining why admission was medically necessary.'
+  ],
+  sources: '1 rejection letter, p.1; 2 doctor\'s admission notes; 3 discharge summary, p.1',
+  ready: '<p class="ok">3 of 3 citations verified against their sources</p><p class="small" style="color:var(--amber)">Add your doctor\'s certificate before you send: the letter refers to it.</p>'
+}
 ];
-const PREC = [
-  ['Non-disclosure raised in policy year 6; moratorium applied', 'Allowed', 'won'],
-  ['Hypertension "concealed"; insurer\'s own medical test showed normal BP', 'Allowed', 'won'],
-  ['Non-disclosure inside year 3; history in hospital records', 'Dismissed', 'lost']
-];
-const TRACE = [
-  ['Reading rejection letter', 'Found: repudiated under Clause 7.3, non-disclosure of hypertension', 0],
-  ['Reading policy wording (32 pages)', 'Clause 7.3 found on page 14; mentions a 60-month moratorium', 0],
-  ['Reading renewal certificate', 'Continuous cover since 12 Apr 2019 → 88 months at admission', 0],
-  ['Classifying rejection reason', 'Non-disclosure at proposal (category G1)', 0],
-  ['Rules engine: moratorium check', '88 ≥ 60 months and no fraud alleged → ground found', 0],
-  ['Searching IRDAI regulations', '3 passages matched; best: Master Circular 2024, moratorium', 0],
-  ['Checking pre-policy medical record', 'BP normal in 2019 → conflicts with the rejection reason', 0],
-  ['Finding similar Ombudsman decisions', '3 past cases with the same reason', 0],
-  ['Verifying every citation word for word', '5 of 5 quotes found in their sources', 0],
-  ['One fact missing', 'Has the policy been renewed every year without a gap? (answered: yes)', 1]
-];
+let ci = 0;
+const K = () => CASES[ci];
+const caseTabs = () => `<div class="tabs" role="group" aria-label="Sample case">${CASES.map((c,i)=>`<button data-case="${i}" aria-pressed="${i===ci}">Case ${i+1}: ${c.label}</button>`).join('')}</div>`;
+const chipsFor = keys => keys.map(k=>`<button class="chip" data-src="${k}"><b>${K().src[k].e}</b>${K().src[k].t.split(',')[0]}</button>`).join('');
 
 const page = {
 home: () => `
@@ -174,7 +269,7 @@ home: () => `
       <div class="doc" style="padding-right:clamp(24px,18vw,236px)">
         <p><b>SURAKSHA GENERAL INSURANCE LTD</b><br><span style="color:#5b6366">Claims Department, Chennai, 02/09/2026</span></p>
         <p>Dear Ms Meena S.,</p>
-        <p>Your claim for ${inr(C.amount)} <mark>stands repudiated under Clause 7.3</mark> as the insured was found to be suffering from Hypertension prior to policy inception, <mark>which was not disclosed</mark> in the proposal form.</p>
+        <p>Your claim for ${inr(CASES[0].C.amount)} <mark>stands repudiated under Clause 7.3</mark> as the insured was found to be suffering from Hypertension prior to policy inception, <mark>which was not disclosed</mark> in the proposal form.</p>
         <p style="margin:0">Claims Manager</p>
       </div>
       <div class="note" style="top:178px"><b>Covered 88 months.</b> After 60 continuous months a claim can't be refused for non-disclosure without proof of fraud.</div>
@@ -189,6 +284,7 @@ home: () => `
   </div>
   <p class="small mute" style="margin-top:12px">Sources: IRDAI data reported by Moneylife and NewsBytes; Alei analysis of published Ombudsman awards. The letter above is a fictional sample.</p>`,
 upload: () => `
+  ${caseTabs()}
   <div class="grid two">
     <div>
       <h1>Add your documents</h1>
@@ -197,70 +293,71 @@ upload: () => `
         <div class="drop ${files[id]?'done':''}" style="position:relative"><div class="thumb"></div><div style="flex:1"><b>${t}</b><div class="small mute">${files[id]?esc(files[id]):(req?'Required. PDF, JPG or PNG':'Optional')}</div></div>
           ${files[id]?'<span class="ok">Read</span>':`<label class="pick" for="f-${id}">Choose file</label><input type="file" id="f-${id}" data-doc="${id}" accept=".pdf,image/*">`}</div>`).join('')}
       <p style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="#analyse" aria-disabled="${files.rej?'false':'true'}">Check my case</a><button class="btn ghost" id="usesample">Use the sample documents</button></p>
-      <p class="small mute">Files stay in your browser in this prototype; the analysis shown uses the sample case.</p>
+      <p class="small mute">Files stay in your browser in this prototype; the analysis shown uses the selected sample case.</p>
     </div>
     <div class="card"><h2>What we pull out</h2>
       <p class="small mute">Read automatically from the documents. Sample values shown:</p>
-      ${[['Insurer',C.insurer],['Policy number',C.policy],['Covered since',C.since],['Admitted',C.admit],['Treatment',C.diag],['Claim amount',inr(C.amount)],['Rejected on',C.rejected]].map(([k,v])=>`<div class="prec"><span class="mute">${k}</span><b>${esc(v)}</b></div>`).join('')}
+      ${[['Insurer',K().C.insurer],['Policy number',K().C.policy],['Covered since',K().C.since],['Admitted',K().C.admit],['Treatment',K().C.diag],['Claim amount',inr(K().C.amount)],['Rejected on',K().C.rejected]].map(([k,v])=>`<div class="prec"><span class="mute">${k}</span><b>${esc(v)}</b></div>`).join('')}
     </div>
   </div>`,
 analyse: () => `
+  ${caseTabs()}
   <div class="grid two">
     <div>
       <h1>ClaimBack is checking your case</h1>
       <p class="mute">Every step is shown. Nothing reaches your verdict unless its source is found word for word.</p>
-      <ol class="trace" id="trace">${TRACE.map(([a,b,f])=>`<li><span class="dot ${f?'flag':''}"></span><span><b>${a}</b><br><span class="small mute">${b}</span></span></li>`).join('')}</ol>
+      <ol class="trace" id="trace">${K().trace.map(([a,b,f])=>`<li><span class="dot ${f?'flag':''}"></span><span><b>${a}</b><br><span class="small mute">${b}</span></span></li>`).join('')}</ol>
       <p style="margin-top:18px"><a class="btn" href="#verdict" id="toV" hidden>See the verdict</a></p>
     </div>
-    <div><p class="small mute">Rejection letter · page 1</p>
+    <div><p class="small mute">Rejection letter, page 1</p>
       <div class="doc">
-        <p><b>SURAKSHA GENERAL INSURANCE LTD</b><br>Claims Department, Chennai</p>
-        <p>Date: 02/09/2026 &nbsp; Policy No: ${C.policy}</p>
-        <p>Dear Ms Meena S.,</p>
-        <p>We refer to your cashless request for ${inr(C.amount)} towards Coronary Angioplasty at the hospital from 14/08/2026 to 19/08/2026.</p>
-        <p><mark>Your claim stands repudiated under <mark class="t">Clause 7.3 (Non-disclosure of material facts)</mark> as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.</mark></p>
+        <p><b>${K().C.short}</b><br>Claims Department, ${K().C.city}</p>
+        <p>Date: ${K().C.rejNum} &nbsp; Policy No: ${K().C.policy}</p>
+        <p>Dear ${K().C.name},</p>
+        <p>We refer to your claim for ${inr(K().C.amount)} towards ${K().C.diag} at the hospital from ${K().C.range}.</p>
+        <p><mark>${K().reason}</mark></p>
         <p>You may approach our Grievance Redressal Officer if you are not satisfied with this decision.</p>
       </div>
     </div>
   </div>`,
 verdict: () => `
+  ${caseTabs()}
   <div class="card" style="margin-bottom:24px"><div class="verdict">
     <div style="flex:1 1 320px"><p class="small mute" style="margin:0">Case strength</p>
-      <h1 class="${lang==='en'?'':lang}" style="margin:4px 0 0">${T.head[lang]}</h1>
-      <div class="meter"><span class="on"></span><span class="on"></span><span class="on"></span></div>
-      <p class="${lang==='en'?'':lang}" style="margin:8px 0 0">${T.sum[lang]}</p>
+      <h1 class="${lang==='en'?'':lang}" style="margin:4px 0 0">${K().head[lang]}</h1>
+      <div class="meter">${[1,2,3].map(n=>`<span class="${n<=K().strength?'on':''}"></span>`).join('')}</div>
+      <p class="${lang==='en'?'':lang}" style="margin:8px 0 0">${K().sum[lang]}</p>
     </div>
-    <div><p class="small mute" style="margin:0">At stake</p><div class="big" style="font-size:clamp(44px,7vw,68px)">${inr(C.amount)}</div></div>
+    <div><p class="small mute" style="margin:0">At stake</p><div class="big" style="font-size:clamp(44px,7vw,68px)">${inr(K().C.amount)}</div></div>
   </div></div>
   <div class="grid two">
     <div><h2>Grounds for appeal</h2>
-      ${GROUNDS.map(g=>`<div class="ground"><h3>${lang==='en'?g.h:`<span class="${lang}">${g[lang]}</span>`}</h3><p class="small" style="margin:0">${g.b}</p>
-        <div class="chips">${g.c.map(k=>`<button class="chip" data-src="${k}"><b>${EX[k]}</b>${SRC[k].t.split(',')[0].split(' — ')[0]}</button>`).join('')}</div></div>`).join('')}
+      ${K().grounds.map(g=>`<div class="ground"><h3>${lang==='en'?g.h:`<span class="${lang}">${g[lang]}</span>`}</h3><p class="small" style="margin:0">${g.b}</p>
+        <div class="chips">${chipsFor(g.c)}</div></div>`).join('')}
       <p><a class="btn" href="#letter">Write my appeal letter</a></p>
     </div>
     <div class="card"><h2>Past Ombudsman decisions like yours</h2>
-      <p class="small mute">Same rejection reason (non-disclosure at proposal). Illustrative samples; the product links each to the published award.</p>
-      ${PREC.map(([d,o,k])=>`<div class="prec"><span>${d}</span><span class="tag ${k}">${o}</span></div>`).join('')}
-      <p class="small" style="margin-top:12px">The case that was dismissed was inside the moratorium. Yours is not.</p>
+      <p class="small mute">${K().precNote}</p>
+      ${K().prec.map(([d,o,k])=>`<div class="prec"><span>${d}</span><span class="tag ${k}">${o}</span></div>`).join('')}
+      ${K().precTip?`<p class="small" style="margin-top:12px">${K().precTip}</p>`:''}
     </div>
   </div>`,
 letter: () => `
+  ${caseTabs()}
   <div class="tabs" role="group" aria-label="Letter type">
-    <button aria-pressed="true">1. Grievance to insurer</button><button disabled>2. Bima Bharosa — unlocks if no fair reply</button><button disabled>3. Ombudsman complaint — unlocks after insurer's reply window</button>
+    <button aria-pressed="true">1. Grievance to insurer</button><button disabled>2. Bima Bharosa, unlocks if no fair reply</button><button disabled>3. Ombudsman complaint, unlocks after the insurer's reply window</button>
   </div>
   <div class="grid two">
     <div class="letter">
-      <p>To the Grievance Redressal Officer,<br>Suraksha General Insurance Ltd, Chennai</p>
-      <p><b>Subject: Grievance against repudiation of claim under Policy No. ${C.policy}, dated 02/09/2026</b></p>
-      <p>I write to contest the repudiation of my cashless claim of ${inr(C.amount)} for coronary angioplasty (14–19 August 2026), rejected under Clause 7.3 for alleged non-disclosure of hypertension.<sup>1</sup></p>
-      <p>First, my policy has been renewed continuously since 12 April 2019, a period of 88 months.<sup>2</sup> Under the IRDAI Master Circular on Health Insurance Business (29 May 2024), after sixty continuous months of coverage no claim is contestable on grounds of non-disclosure except established fraud.<sup>3</sup> Your own policy wording incorporates this moratorium.<sup>4</sup> Your letter does not allege fraud.</p>
-      <p>Second, your pre-policy health check on 9 April 2019 recorded normal blood pressure and accepted me at standard rates.<sup>5</sup></p>
-      <p>I request that you withdraw the repudiation and settle the claim in full within the timeline required by IRDAI, and provide a copy of the complete claim file and the documents relied on.</p>
-      <p>Yours faithfully,<br>Meena S.</p>
-      <p class="small" style="font-family:'IBM Plex Sans',sans-serif;color:#5b6366">Sources: 1 rejection letter, p.1; 2 renewal certificate; 3 IRDAI Master Circular 2024; 4 policy wording, p.14; 5 pre-policy check report</p>
+      <p>To the Grievance Redressal Officer,<br>${K().C.insurer.replace(' (fictional)','')}, ${K().C.city}</p>
+      <p><b>Subject: Grievance against rejection of claim under Policy No. ${K().C.policy}, dated ${K().C.rejNum}</b></p>
+      ${K().letter.map(p=>`<p>${p}</p>`).join('')}
+      <p>I request that you withdraw the rejection and settle the claim in full within the timeline required by IRDAI, and provide a copy of the complete claim file and the documents relied on.</p>
+      <p>Yours faithfully,<br>${K().C.name}</p>
+      <p class="small" style="font-family:'IBM Plex Sans',sans-serif;color:#5b6366">Sources: ${K().sources}</p>
     </div>
     <div class="card"><h2>Ready to send</h2>
-      <p class="ok">5 of 5 citations verified against their sources</p>
+      ${K().ready}
       <p class="small mute">The download stays locked until every citation is verified.</p>
       <p style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
         <button class="btn" id="pdf">Download PDF pack (letter + evidence pages)</button>
@@ -274,11 +371,11 @@ track: () => `
     <div><h1>Your escalation plan</h1>
       <p class="mute">Dates are worked out from the day you send the grievance. Add them to your calendar so nothing lapses.</p>
       <ol class="rail">
-        <li class="done"><span class="date">2 Sep 2026</span> — Claim rejected<br><span class="small mute">Rejection letter received</span></li>
-        <li class="now"><span class="date">Today</span> — Send grievance to insurer<br><span class="small mute">Letter ready in the Letter tab</span></li>
-        <li><span class="date">+14 days</span> — Insurer's reply due<br><span class="small mute">Upload their reply here and ClaimBack re-checks it</span></li>
-        <li><span class="date">If no fair reply</span> — Escalate on IRDAI's Bima Bharosa portal<br><span class="small mute">Complaint text pre-filled</span></li>
-        <li><span class="date">Then</span> — Insurance Ombudsman complaint<br><span class="small mute">Pre-filled form; claims up to ₹50 lakh; free to file</span></li>
+        <li class="done"><span class="date">${K().C.rejected}</span>, claim rejected<br><span class="small mute">Rejection letter received</span></li>
+        <li class="now"><span class="date">Today</span>, send grievance to insurer<br><span class="small mute">Letter ready in the Letter tab</span></li>
+        <li><span class="date">+14 days</span>, insurer's reply due<br><span class="small mute">Upload their reply here and ClaimBack re-checks it</span></li>
+        <li><span class="date">If no fair reply</span>, escalate on IRDAI's Bima Bharosa portal<br><span class="small mute">Complaint text pre-filled</span></li>
+        <li><span class="date">Then</span>, Insurance Ombudsman complaint<br><span class="small mute">Pre-filled form; claims up to ₹50 lakh; free to file</span></li>
       </ol>
     </div>
     <div class="card"><h2>What happens next</h2>
@@ -289,6 +386,7 @@ track: () => `
     </div>
   </div>`
 };
+
 
 const app = document.getElementById('app'), nav = document.getElementById('nav'), drawer = document.getElementById('drawer');
 let timer;
@@ -308,11 +406,13 @@ function render(){
 }
 document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
-  if (chip) { const s = SRC[chip.dataset.src];
+  if (chip) { const s = K().src[chip.dataset.src];
     drawer.innerHTML = `<button class="btn ghost" id="close" style="margin-bottom:16px">Close</button><p class="small mute">Source</p><h2>${esc(s.t)}</h2><div class="doc"><mark>${esc(s.q)}</mark></div>${s.p?'<p class="small mute" style="margin-top:12px">Paraphrased in this prototype. The product quotes the exact clause from the official circular and verifies it word for word.</p>':'<p class="ok" style="margin-top:12px">✓ Quote found word for word in the source</p>'}`;
     drawer.hidden = false; return; }
   if (e.target.id === 'close') { drawer.hidden = true; return; }
-  if (e.target.id === 'usesample') { Object.assign(files, {rej:'SGI_repudiation_02Sep2026.pdf', pol:'SGI_Family_Health_Wording.pdf', bill:'Discharge_Summary_19Aug.pdf', ren:'Renewal_2026.jpg'}); render(); return; }
+  if (e.target.id === 'usesample') { Object.assign(files, K().files); render(); return; }
+  const cb = e.target.closest('[data-case]');
+  if (cb) { ci = Number(cb.dataset.case); for (const k in files) delete files[k]; render(); return; }
   if (e.target.id === 'pdf' || e.target.id === 'copy') { const m = document.getElementById('msg'); m.hidden = false; m.textContent = 'In the full app this downloads the PDF pack or copies the email. This prototype shows the flow only.'; return; }
   if (e.target.id === 'ics') { const m = document.getElementById('msg2'); m.hidden = false; m.textContent = 'In the full app this saves a calendar file with each deadline.'; return; }
   const lb = e.target.closest('.lang button');

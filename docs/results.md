@@ -25,4 +25,4 @@ Hardest classes on v1 (lowest F1): `pre_existing_disease` 0.73, `treatment_not_c
 
 ## Software
 
-25 Python tests (rules, citations, letter, deadlines, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.
+29 Python tests (rules, citations, letter, deadlines, precedent finder, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.

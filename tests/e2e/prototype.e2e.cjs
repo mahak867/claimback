@@ -56,6 +56,21 @@ async function audit(page, label, failures) {
   assert.match(await page.textContent('h1'), /मज़बूत/);
   await page.click('#lang-ta');
   assert.match(await page.textContent('h1'), /வலுவான/);
+  await page.click('#lang-en');
+
+  // Three sample cases: real precedents on case 1, a strong rule-based case 2, an honest "Fair" case 3.
+  assert.ok((await page.textContent('main')).includes('LI/BK-10/05-06'));
+  await page.click('[data-case="1"]');
+  assert.match(await page.textContent('h1'), /Strong case/);
+  assert.ok((await page.textContent('main')).includes('36-month maximum'));
+  await page.click('[data-case="2"]');
+  assert.match(await page.textContent('h1'), /Fair case/);
+  assert.strictEqual(await page.locator('.meter span.on').count(), 2);
+  await page.click('.chip >> nth=0');
+  assert.ok((await page.textContent('#drawer')).includes('Platelet count 85,000'));
+  await page.click('#close');
+  await page.evaluate(() => { location.hash = 'letter'; });
+  assert.ok((await page.textContent('main')).includes('₹42,000'));
 
   await browser.close();
   if (failures.length) {

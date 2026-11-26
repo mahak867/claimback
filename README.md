@@ -8,7 +8,7 @@ Built for AI Vibeathon 2026 (DotRepo, powered by Adaption), **Open Innovation** 
 
 ![ClaimBack prototype: upload, agent steps, verdict with verified sources, Tamil and Hindi, appeal letter, deadline plan](docs/demo.gif)
 
-**Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 25-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
+**Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 27-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
 
 ## Why
 
@@ -40,18 +40,19 @@ flowchart LR
 
 | Path | What it is | Status |
 | --- | --- | --- |
-| [`prototype/`](prototype/index.html) | Clickable prototype of all six screens on a fictional case, in English, Tamil and Hindi | Done |
+| [`prototype/`](prototype/index.html) | Clickable prototype of all six screens with three sample cases (two strong, one honestly rated Fair) and real Ombudsman awards, in English, Tamil and Hindi | Done |
 | [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium, pre-existing-disease wait cap, insurer's own health check, cashless delay; case strength | Done, tested |
 | [`claimback/citations.py`](claimback/citations.py) | Citation verifier: a quote is shown only if found word for word in its source (OCR-tolerant) | Done, tested |
 | [`claimback/letter.py`](claimback/letter.py) | Grievance letter in the patient's voice; refuses to build while any citation is unverified | Done, tested |
 | [`claimback/deadlines.py`](claimback/deadlines.py) | Escalation ladder (insurer → Bima Bharosa → Ombudsman) and a calendar (.ics) export | Done, tested |
+| [`claimback/precedents.py`](claimback/precedents.py) | Precedent finder: past Ombudsman awards on the same rejection reason, ranked by similarity, outcome read from the decision text ("not stated" when absent, never guessed); tested on real redacted awards from Alei | Done, tested |
 | [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests (25 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
+Run the tests (29 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q

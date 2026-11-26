@@ -70,3 +70,10 @@ def test_moratorium_not_for_ped_exclusion():
 
 def test_single_legal_ground_is_strong():
     assert strength(run_rules(sample())) == "Strong"
+
+
+def test_sum_insured_increase_limits_moratorium_to_original_cover():
+    g = [x for x in run_rules(sample(sum_insured_increased_on=date(2024, 1, 1))) if x.rule == "moratorium"][0]
+    assert "original sum insured" in g.explanation and "original sum insured" in g.letter
+    g = [x for x in run_rules(sample(sum_insured_increased_on=date(2020, 1, 1))) if x.rule == "moratorium"][0]
+    assert "original sum insured" not in g.explanation

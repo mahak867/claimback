@@ -16,13 +16,16 @@ RULES = {
         "value": 60,
         "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
         "clause": None,
+        # Corroborated by several secondary sources (Complinity, Value Added, gameofinsurance,
+        # Oquilia): only established fraud is excepted, and a sum-insured increase restarts the
+        # clock for the added amount. Flip to True once read in the official IRDAI PDF.
         "confirmed": False,
     },
     "ped_max_wait_months": {
         "value": 36,
-        "source": "IRDAI (Insurance Products) Regulations 2024",
-        "clause": None,
-        "confirmed": False,
+        "source": "IRDAI (Insurance Products) Regulations 2024; IRDAI Health Department page (irdai.gov.in/health-dept)",
+        "clause": "Maximum waiting period for pre-existing diseases not more than 36 months, with continuous renewal",
+        "confirmed": True,
     },
     "cashless_decision_hours": {
         "value": 1,
@@ -43,6 +46,7 @@ class Case:
     ped_wait_months_in_policy: int | None = None
     pre_policy_check_normal: bool | None = None
     cashless_decision_hours: float | None = None
+    sum_insured_increased_on: date | None = None  # the moratorium clock restarts for the added amount
 
 
 @dataclass
@@ -71,19 +75,24 @@ def moratorium(case: Case) -> Ground | None:
     covered = months_between(case.policy_inception, case.admission)
     if covered < limit:
         return None
+    caveat = ""
+    if case.sum_insured_increased_on and months_between(case.sum_insured_increased_on, case.admission) < limit:
+        caveat = (" The sum insured was increased less than 60 months before admission, so this "
+                  "protection covers the original sum insured only.")
     return Ground(
         rule="moratorium",
         title="The moratorium protects this claim",
         explanation=(
             f"The policy has run for {covered} continuous months. After {limit} months "
             "a claim cannot be contested for non-disclosure unless fraud is established, "
-            "and the rejection does not allege fraud."
+            "and the rejection does not allege fraud." + caveat
         ),
         sources=[RULES["moratorium_months"]["source"], "policy renewal history"],
         letter=(
             f"My policy has been renewed without a break for {covered} months. After {limit} continuous "
             "months of cover, no claim can be contested on grounds of non-disclosure except established "
-            "fraud, and your letter does not allege fraud."
+            "fraud, and your letter does not allege fraud." + (
+                " I accept this protection applies to my original sum insured." if caveat else "")
         ),
     )
 

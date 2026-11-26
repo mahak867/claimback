@@ -51,7 +51,7 @@ flowchart LR
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests (24 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
+Run the tests (25 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q
@@ -70,6 +70,10 @@ Check a dataset exported from Adaption:
 ```bash
 python tools/validate_dataset.py path/to/export.jsonl
 ```
+
+## Results so far
+
+See [docs/results.md](docs/results.md). A keyword baseline scores 0.89 macro-F1 on our synthetic letters but only 0.54 on real Ombudsman awards (Alei), so the target for the fine-tuned model is to beat 0.70 on real awards. Dataset v1 was 37% clean; the v2 description fixing its defects is in [docs/adaption-dataset-v2.md](docs/adaption-dataset-v2.md).
 
 ## Rule sources
 

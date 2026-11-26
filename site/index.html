@@ -126,7 +126,7 @@ footer{border-top:1px solid var(--line);padding-block:20px;font-size:13px;color:
 
 <script>
 {
-const S = [['home','Start'],['upload','Upload'],['analyse','Agent'],['verdict','Verdict'],['letter','Letter'],['track','Track']];
+const S = [['home','Start'],['try','Your letter'],['upload','Upload'],['analyse','Agent'],['verdict','Verdict'],['letter','Letter'],['track','Track']];
 let lang = 'en';
 const files = {};
 const inr = n => '₹' + n.toLocaleString('en-IN');
@@ -260,6 +260,86 @@ const CASES = [
   ready: '<p class="ok">3 of 3 citations verified against their sources</p><p class="small" style="color:var(--amber)">Add your doctor\'s certificate before you send: the letter refers to it.</p>'
 }
 ];
+const TRY = {text:'', start:'', cont:true, res:null};
+const GROUND_KW = [
+  ['fraud_misrepresentation', /fraud|forged|fabricat|manipulat|misrepresent/],
+  ['policy_not_in_force', /lapse|not in force|grace period|premium (was )?not paid|non-payment/],
+  ['waiting_period', /waiting period/],
+  ['non_disclosure_proposal', /non-?disclosure|not disclosed|suppress|conceal/],
+  ['pre_existing_disease', /pre-?existing/],
+  ['documents_not_submitted', /documents?.{0,40}(not (been )?(submitted|received|provided))|non-?submission|pending documents/],
+  ['hospitalisation_not_justified', /not medically necessary|opd basis|did not (warrant|require) (hospitali|admission)|hospitali[sz]ation (was )?not (justified|required)/],
+  ['amount_limited', /sub-?limit|room rent|proportionate|capped|restricted to|deduct/],
+  ['treatment_not_covered', /not covered|not payable under|day-?care list|outside the scope/],
+  ['excluded_by_clause', /exclu/]
+];
+const GROUND_NAME = {fraud_misrepresentation:'Fraud or misrepresentation', policy_not_in_force:'Policy not in force', waiting_period:'Waiting period not completed', non_disclosure_proposal:'Non-disclosure at proposal', pre_existing_disease:'Pre-existing disease', documents_not_submitted:'Documents not submitted', hospitalisation_not_justified:'Hospitalisation not medically necessary', amount_limited:'Amount capped or deducted', treatment_not_covered:'Treatment not covered', excluded_by_clause:'Excluded by a clause'};
+const MON = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+const HMC = 'IRDAI Master Circular on Health Insurance Business (29 May 2024)';
+function findDates(t){
+  const out = [];
+  const push = (pos,y,m,d) => { const dt = new Date(Date.UTC(y,m-1,d)); if (dt.getUTCMonth()===m-1 && dt.getUTCDate()===d) out.push({pos, d:dt}); };
+  for (const m of t.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)) push(m.index,+m[1],+m[2],+m[3]);
+  for (const m of t.matchAll(/\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})\b/g)) push(m.index,+m[3],+m[2],+m[1]);
+  for (const m of t.matchAll(/\b(\d{1,2})(?:st|nd|rd|th)?[ -]([A-Za-z]{3})[A-Za-z]*[ ,-]+(\d{4})\b/g)) { const mo = MON[m[2].toLowerCase()]; if (mo) push(m.index,+m[3],mo,+m[1]); }
+  return out.sort((a,b)=>a.pos-b.pos);
+}
+function dateNear(t, re, dates){
+  for (const m of t.matchAll(new RegExp(re.source, 'gi'))) { const end = m.index + m[0].length; const hit = dates.find(x => x.pos - end >= 0 && x.pos - end <= 60); if (hit) return hit.d; }
+  return null;
+}
+const monthsBetween = (a,b) => (b.getUTCFullYear()-a.getUTCFullYear())*12 + (b.getUTCMonth()-a.getUTCMonth()) - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
+const fmtD = d => d ? d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}) : 'not found';
+function analyseLetter(text, startISO, cont){
+  const low = text.toLowerCase();
+  const ground = (GROUND_KW.find(([,re]) => re.test(low)) || [null])[0];
+  const sents = text.replace(/[ \t]+/g,' ').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+  const reason = sents.find(s => /repudiat|reject|not (admissible|payable)|declin|denied/i.test(s)) || null;
+  const cm = text.match(/(?:Clause|Section|Exclusion)\s+[\dA-Z][\w.()-]*/);
+  const am = text.match(/(?:₹|rs\.?|inr)\s*(\d[\d,]*(?:\.\d+)?)\s*(lakh|lac)?/i);
+  const amount = am ? Math.round(parseFloat(am[1].replace(/,/g,'')) * (am[2] ? 100000 : 1)) : null;
+  const dates = findDates(text);
+  const admit = dateNear(text, /admi|from/, dates);
+  const start = startISO ? new Date(startISO + 'T00:00:00Z') : null;
+  const covered = start && admit ? monthsBetween(start, admit) : null;
+  const wm = low.match(/(\d{2})[- ]?months?\s+waiting period|waiting period of (\d{2}) months/);
+  const policyWait = wm ? +(wm[1] || wm[2]) : null;
+  const grounds = [];
+  if (ground === 'non_disclosure_proposal' && cont && covered !== null && covered >= 60 && !/fraud/.test(low))
+    grounds.push({h:'The moratorium protects this claim', b:`You have been covered for ${covered} continuous months. After 60 months no claim can be contested for non-disclosure except established fraud, and this letter does not allege fraud.`, s:`${HMC}, Chapter I para 13`, legal:1});
+  if ((ground === 'waiting_period' || ground === 'pre_existing_disease') && policyWait && policyWait > 36 && cont && covered !== null && covered >= 36)
+    grounds.push({h:'The waiting period applied is longer than allowed', b:`The letter applies a ${policyWait}-month waiting period; IRDAI caps it at 36 months, and you have been covered for ${covered} months.`, s:'IRDAI (Insurance Products) Regulations 2024', legal:1});
+  if (ground === 'documents_not_submitted')
+    grounds.push({h:'The insurer must collect the documents itself', b:'Insurers and TPAs must collect the required documents from the hospital; the policyholder is not required to submit them.', s:`${HMC}, Chapter I para 17(c)`, legal:1});
+  if (!cm)
+    grounds.push({h:'The rejection does not cite the policy terms it relies on', b:'A rejection must give full details with reference to the specific terms and conditions of the policy. No clause is cited here.', s:`${HMC}, Chapter I para 17(b)`, legal:1});
+  const needs = [];
+  if (ground === 'non_disclosure_proposal' && !start) needs.push('your policy start date, to check the 60-month moratorium');
+  if ((ground === 'waiting_period' || ground === 'pre_existing_disease') && !start) needs.push('your policy start date, to check the 36-month waiting-period cap');
+  if (start && !admit) needs.push('the admission date, which the letter does not state clearly');
+  const strength = grounds.some(g=>g.legal) ? 'Strong' : (reason ? 'Fair' : 'Unclear');
+  return {ground, reason, clause: cm ? cm[0] : null, amount, admit, covered, policyWait, grounds, needs, strength};
+}
+function highlight(text, quotes){
+  let parts = [{t:text, m:false}];
+  for (const q of quotes.filter(Boolean)) {
+    parts = parts.flatMap(p => { if (p.m) return [p]; const i = p.t.indexOf(q); return i < 0 ? [p] : [{t:p.t.slice(0,i),m:false},{t:q,m:true},{t:p.t.slice(i+q.length),m:false}]; });
+  }
+  return parts.map(p => p.m ? `<mark>${esc(p.t)}</mark>` : esc(p.t)).join('').replace(/\n/g,'<br>');
+}
+function draftLetter(r){
+  const lines = [`To the Grievance Redressal Officer,`, ``, `Subject: Grievance against rejection of my health insurance claim`, ``,
+    `I write to contest the rejection of my claim${r.amount ? ' of ' + inr(r.amount) : ''}. Your letter states: "${r.reason || '[rejection sentence]'}"`, ``];
+  r.grounds.forEach((g,i) => lines.push(`${i+1}. ${g.b} (${g.s})`, ``));
+  lines.push(`I request that you withdraw the rejection and settle the claim in full within the timeline required by IRDAI, confirm that the rejection was approved by your Claims Review Committee as the ${HMC} requires, and send me a copy of the complete claim file and the documents relied on.`, ``, `Yours faithfully,`, `[Your name]`, `[Policy number]`);
+  return lines.join('\n');
+}
+const SAMPLE_LETTER = `Dear Sir/Madam,
+We refer to your reimbursement claim for Rs. 1,85,000 towards Laparoscopic Cholecystectomy at Sri Ram Hospital, admitted on 12/07/2026 and discharged on 15/07/2026.
+On scrutiny, it is observed that the insured was suffering from Gall Stones prior to the inception of the policy, which was not disclosed in the proposal form. Hence the claim stands repudiated under Clause 6.2 of the policy for non-disclosure of material facts.
+Yours faithfully,
+Claims Department`;
+
 let ci = 0;
 const K = () => CASES[ci];
 const caseTabs = () => `<div class="tabs" role="group" aria-label="Sample case">${CASES.map((c,i)=>`<button data-case="${i}" aria-pressed="${i===ci}">Case ${i+1}: ${c.label}</button>`).join('')}</div>`;
@@ -271,7 +351,7 @@ home: () => `
     <div>
       <h1>Rejected health insurance claim? Get a cited appeal letter in minutes.</h1>
       <p class="mute">ClaimBack reads the insurer's letter and your policy, checks them against IRDAI rules, shows how the Ombudsman ruled in cases like yours, and writes the appeal in English, Tamil or Hindi. Free for patients.</p>
-      <p style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px"><a class="btn" href="#upload">Check my rejection</a><a class="btn ghost" href="#analyse">Try the sample case</a></p>
+      <p style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px"><a class="btn" href="#try">Check my rejection</a><a class="btn ghost" href="#analyse">Try the sample case</a></p>
       <p class="small mute">Documents are deleted after 24 hours. Runs on our own open-source model.</p>
     </div>
     <div class="case">
@@ -292,6 +372,37 @@ home: () => `
     <div><b>Free</b><span class="small mute">against 15–18% charged by claim-recovery firms</span></div>
   </div>
   <p class="small mute" style="margin-top:12px">Sources: IRDAI data reported by Moneylife and NewsBytes; Alei analysis of published Ombudsman awards. The letter above is a fictional sample.</p>`,
+try: () => { const r = TRY.res; return `
+  <div class="grid two">
+    <div>
+      <h1>Check your own rejection letter</h1>
+      <p class="mute">Paste the text of the insurer's letter. It is checked in your browser against confirmed IRDAI rules; nothing is uploaded.</p>
+      <form id="tryform">
+        <label for="trytext" class="small"><b>Rejection letter text</b></label>
+        <textarea id="trytext" rows="10" style="width:100%;font:15px/1.5 'IBM Plex Sans',sans-serif;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin:6px 0 12px">${esc(TRY.text)}</textarea>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:end">
+          <p style="margin:0"><label for="trystart" class="small"><b>Policy start date</b> (first policy)</label><br><input id="trystart" type="date" value="${esc(TRY.start)}" style="font:16px 'IBM Plex Sans',sans-serif;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)"></p>
+          <p style="margin:0 0 10px"><input id="trycont" type="checkbox" ${TRY.cont?'checked':''}> <label for="trycont" class="small">Renewed every year without a break</label></p>
+        </div>
+        <p style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px"><button class="btn" type="submit">Check this letter</button><button class="btn ghost" type="button" id="trysample">Fill in an example</button></p>
+      </form>
+      <p class="small mute">This live check uses ClaimBack's tested rules engine. The fine-tuned model replaces the text-reading step next.</p>
+    </div>
+    <div>${!r ? `<div class="card"><h2>What you'll get</h2><p>The rejection reason, the exact sentence and clause the insurer relied on, every IRDAI rule that applies with its clause number, and a grievance letter to send.</p></div>` : `
+      <div class="card" style="margin-bottom:16px"><p class="small mute" style="margin:0">Case strength</p>
+        <h2 style="margin:4px 0 8px">${r.strength === 'Strong' ? 'Strong case. Rules support your appeal' : r.strength === 'Fair' ? 'Fair case. No rule found yet' : 'Unclear. Paste the full letter'}</h2>
+        <div class="meter">${[1,2,3].map(n=>`<span class="${n <= (r.strength==='Strong'?3:r.strength==='Fair'?2:1) ? 'on' : ''}"></span>`).join('')}</div>
+        ${[['Reason', r.ground ? GROUND_NAME[r.ground] : 'Not recognised'], ['Clause cited', r.clause || 'None cited'], ['Amount', r.amount ? inr(r.amount) : 'Not found'], ['Admitted', fmtD(r.admit)], ['Months covered', r.covered !== null ? String(r.covered) : 'Add your policy start date']].map(([k,v])=>`<div class="prec"><span class="mute">${k}</span><b>${esc(v)}</b></div>`).join('')}
+      </div>
+      ${r.needs.length ? `<p class="small" style="color:var(--amber)">To check more rules, add ${esc(r.needs.join('; '))}.</p>` : ''}
+      ${r.grounds.map(g=>`<div class="ground"><h3>${esc(g.h)}</h3><p class="small" style="margin:0">${esc(g.b)}</p><div class="chips"><span class="chip"><b>Rule</b>${esc(g.s)}</span></div></div>`).join('')}
+      ${!r.grounds.length && r.reason ? `<div class="ground"><h3>No rule clearly broken</h3><p class="small" style="margin:0">That doesn't make the appeal hopeless: it rests on evidence, such as your doctor's notes or the policy wording. ClaimBack will still draft the grievance and the Ombudsman route stays open.</p></div>` : ''}
+      <p class="small mute">The letter, with what the insurer relied on highlighted (found word for word):</p>
+      <div class="doc">${highlight(TRY.text, [r.reason, r.clause])}</div>
+      <p style="margin-top:16px"><button class="btn" type="button" id="trydraft">Draft my grievance letter</button></p>
+      <div id="trylet" hidden class="letter" style="white-space:pre-wrap"></div>`}
+    </div>
+  </div>`; },
 upload: () => `
   ${caseTabs()}
   <div class="grid two">
@@ -418,6 +529,8 @@ document.addEventListener('click', e => {
     drawer.innerHTML = `<button class="btn ghost" id="close" style="margin-bottom:16px">Close</button><p class="small mute">Source</p><h2>${esc(s.t)}</h2><div class="doc"><mark>${esc(s.q)}</mark></div>${s.p?'<p class="small mute" style="margin-top:12px">Paraphrased in this prototype. The product quotes the exact clause from the official circular and verifies it word for word.</p>':'<p class="ok" style="margin-top:12px">✓ Quote found word for word in the source</p>'}`;
     drawer.hidden = false; return; }
   if (e.target.id === 'close') { drawer.hidden = true; return; }
+  if (e.target.id === 'trysample') { TRY.text = SAMPLE_LETTER; TRY.start = '2019-03-01'; TRY.cont = true; TRY.res = null; render(); return; }
+  if (e.target.id === 'trydraft') { const el = document.getElementById('trylet'); el.textContent = draftLetter(TRY.res); el.hidden = false; return; }
   if (e.target.id === 'usesample') { Object.assign(files, K().files); render(); return; }
   const cb = e.target.closest('[data-case]');
   if (cb) { ci = Number(cb.dataset.case); for (const k in files) delete files[k]; render(); return; }
@@ -427,6 +540,15 @@ document.addEventListener('click', e => {
   if (lb) { lang = lb.id.slice(5);
     document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed', String(b === lb)));
     if ((location.hash.slice(1)||'home') !== 'verdict') location.hash = 'verdict'; else render(); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'tryform') return;
+  e.preventDefault();
+  TRY.text = document.getElementById('trytext').value;
+  TRY.start = document.getElementById('trystart').value;
+  TRY.cont = document.getElementById('trycont').checked;
+  TRY.res = TRY.text.trim() ? analyseLetter(TRY.text, TRY.start, TRY.cont) : null;
+  render();
 });
 document.addEventListener('change', e => {
   const id = e.target.dataset && e.target.dataset.doc;

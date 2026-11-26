@@ -8,7 +8,7 @@ Built for AI Vibeathon 2026 (DotRepo, powered by Adaption), **Open Innovation** 
 
 ![ClaimBack prototype: upload, agent steps, verdict with verified sources, Tamil and Hindi, appeal letter, deadline plan](docs/demo.gif)
 
-**Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 27-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
+**Live prototype: [claimback-eight.vercel.app](https://claimback-eight.vercel.app)** · 34-second walkthrough: [docs/demo.mp4](docs/demo.mp4).
 
 ## Why
 
@@ -40,6 +40,7 @@ flowchart LR
 
 | Path | What it is | Status |
 | --- | --- | --- |
+| Live letter checker (prototype, "Your letter") | Paste any rejection letter: the rules engine runs in the browser, finds the reason, the exact sentence and clause, applies the confirmed IRDAI rules and drafts the grievance. Nothing is uploaded. Matches the Python engine exactly on 374 letters ([`tools/check_browser_parity.cjs`](tools/check_browser_parity.cjs)) | Done, tested |
 | [`prototype/`](prototype/index.html) | Clickable prototype of all six screens with three sample cases (two strong, one honestly rated Fair) and real Ombudsman awards, in English, Tamil and Hindi | Done |
 | [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium (with sum-insured and permanent-exclusion limits), waiting-period cap, insurer collects documents, discharge and cashless delays, rejection must cite terms, insurer's own health check; case strength | Done, tested |
 | [`claimback/citations.py`](claimback/citations.py) | Citation verifier: a quote is shown only if found word for word in its source (OCR-tolerant) | Done, tested |

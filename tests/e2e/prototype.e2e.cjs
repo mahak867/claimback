@@ -6,7 +6,7 @@ const assert = require('assert');
 
 const AXE = require.resolve('axe-core/axe.min.js');
 const PAGE = 'file://' + path.resolve(__dirname, '../../prototype/index.html');
-const SCREENS = ['home', 'upload', 'analyse', 'verdict', 'letter', 'track'];
+const SCREENS = ['home', 'try', 'upload', 'analyse', 'verdict', 'letter', 'track'];
 
 async function audit(page, label, failures) {
   await page.addScriptTag({ path: AXE });
@@ -71,6 +71,21 @@ async function audit(page, label, failures) {
   await page.click('#close');
   await page.evaluate(() => { location.hash = 'letter'; });
   assert.ok((await page.textContent('main')).includes('₹42,000'));
+
+  // Live checker: a real letter analysed in the browser with the rules engine.
+  await page.evaluate(() => { location.hash = 'try'; });
+  await page.click('#trysample');
+  await page.click('#tryform button[type=submit]');
+  assert.match(await page.textContent('main h2'), /Strong case/);
+  assert.ok((await page.textContent('main')).includes('The moratorium protects this claim'));
+  assert.ok((await page.textContent('main .doc mark >> nth=0')).includes('repudiated under Clause 6.2'));
+  await page.click('#trydraft');
+  assert.ok((await page.textContent('#trylet')).includes('Chapter I para 13'));
+  await page.fill('#trytext', 'Your claim for Rs. 40,000 is rejected as the hospitalisation was not medically necessary.');
+  await page.fill('#trystart', '');
+  await page.click('#tryform button[type=submit]');
+  assert.ok((await page.textContent('main')).includes('does not cite the policy terms'));
+  await audit(page, 'checker/results', failures);
 
   await browser.close();
   if (failures.length) {

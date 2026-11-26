@@ -59,7 +59,7 @@ flowchart LR
 | [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
-| Model fine-tuning on Adaption | Dataset v2 (96% usable); run 1: Qwen3.5-4B, LoRA, 2 epochs on an H100 | Training |
+| Model fine-tuning on Adaption | Dataset v2 (96% usable); run 1: Qwen3.5-4B, LoRA, 2 epochs on an H100 (`adaption_qwen3_5_4b_indian_health_claim_reje_c9b0f086`) | Trained; evaluation on 401 held-out letters next |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
 Run the tests (38 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:

@@ -37,11 +37,28 @@ To train: `python tools/prepare_training.py split/ v1_clean.jsonl v2_clean.jsonl
 
 ## Dataset quality
 
-| Version | Rows | Clean under `validate_dataset.py` | Adaption diversity | Main defect |
-| --- | --- | --- | --- | --- |
-| v1 | 1,000 | 374 (37%) | 0.12 | 37% of inputs were instructions, not letters |
-| v2 | pending | target ≥ 90% | target > 0.12 | |
+| Version | Rows | Usable under `validate_dataset.py` | Inputs that were instructions | Quotes not verbatim | Notes |
+| --- | --- | --- | --- | --- | --- |
+| v1 | 1,000 | 401 (40%) | 374 | 419 | One real insurer named 50 times; Adaption diversity 0.12 |
+| **v2** | 1,000 | **958 (96%)** | **0** | **25** | Fictional insurers rotated; still short (median 45 words), only 5% Tamil and 2% Hindi, reasons uneven (231 excluded-by-clause vs 16 fraud) |
+
+v2 came from the rewritten description in [adaption-dataset-v2.md](adaption-dataset-v2.md). Combined and de-duplicated: 1,359 rows, split 1,087 train / 272 test by `tools/prepare_training.py`.
+
+## Baselines on v2 (the numbers the model must beat)
+
+| Measure | v1 letters | v2 letters | What it shows |
+| --- | --- | --- | --- |
+| Rules: rejection reason | 79.6% | **47.6%** | Rules break as letters get realistic |
+| Rules: exact reason sentence | 7.7% | **8.0%** | Rules can't pick the sentence the appeal quotes |
+| Rules: mean of 11 fields | 64.5% | 76.9% | Amounts and dates are easy; judgement is not |
+| Classifier trained on v1 | | macro-F1 0.662 on v2 | v1 alone doesn't generalise |
+| Classifier trained on v2 | macro-F1 0.805 on v1 | | v2 is the better training set |
+| Classifier, 5-fold on v1+v2 | macro-F1 0.849 | | |
+
+(The rule extractor now returns null for claim type unless the letter says it, matching the instruction to never invent a value; v1's labels guessed "reimbursement", so its claim-type score fell.)
+
+**Plan to measure the fine-tuned model without leakage:** train on v2 inside Adaption, then test on the 401 usable v1 letters, which the model never sees. Targets: reason classification above the v2-trained classifier's 0.805 macro-F1 on v1, and the exact reason sentence above 90% (rules: 7.7%), with every quote verbatim.
 
 ## Software
 
-37 Python tests (rules, citations, letter, deadlines, precedent finder, extraction baseline and evaluator, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.
+38 Python tests (rules, citations, letter, deadlines, precedent finder, extraction baseline and evaluator, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.

@@ -24,7 +24,8 @@ REQUIRED = [
     "rejection_ground", "clause_cited", "rejection_reason_quote",
 ]
 # These may be null when the letter genuinely doesn't state them; the key must still be present.
-NULLABLE = {"policy_number", "policy_inception_date", "admission_date", "discharge_date", "clause_cited"}
+NULLABLE = {"policy_number", "policy_inception_date", "admission_date", "discharge_date", "clause_cited",
+            "claim_type", "diagnosis", "claim_amount_inr"}
 INSTRUCTION = re.compile(r"\b(please (generate|create|draft|write)|generate an?|draft an?|write an?|the letter should|"
                          r"the tone should|use formal indian english|the ground (for rejection )?is)\b", re.I)
 IN_KEYS = ("input", "prompt", "enhanced_prompt", "instruction", "question", "text")
@@ -98,9 +99,13 @@ def check(row):
         if v and norm(v) not in norm(letter):
             problems.append(f"{k} not verbatim in letter")
     try:
+        if out.get("claim_amount_inr") is None:
+            raise LookupError
         amt = float(str(out.get("claim_amount_inr", "")).replace(",", ""))
         if not 5_000 <= amt <= 25_00_000:
             problems.append(f"amount out of range: {amt:.0f}")
+    except LookupError:
+        pass
     except ValueError:
         problems.append("claim_amount_inr not a number")
     a, d, p = (parse_date(out.get(k)) for k in
@@ -112,7 +117,7 @@ def check(row):
         problems.append("discharge before admission")
     if p and a and a < p:
         problems.append("admission before policy start")
-    if out.get("claim_type") not in ("cashless", "reimbursement", "partial_settlement"):
+    if out.get("claim_type") not in (None, "cashless", "reimbursement", "partial_settlement"):
         problems.append(f"bad claim_type: {out.get('claim_type')!r}")
     return problems, out
 

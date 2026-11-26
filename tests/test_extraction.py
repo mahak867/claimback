@@ -5,6 +5,7 @@ import sys
 from claimback.extract_baseline import extract
 
 LETTER = """Kaveri Health Insurance Ltd.
+Reimbursement claim decision
 Date: 24/06/2026
 Policy No: KHI/MDU/2023/77104
 We refer to your claim for Rs. 1,38,000 towards Diabetic Foot Ulcer Surgery at City Hospital from 10/06/2026 to 16/06/2026.
@@ -51,3 +52,11 @@ def test_prepare_training_dedupes_and_splits(tmp_path):
                          capture_output=True, text=True, check=True).stdout
     assert out.startswith("1 unique rows")
     assert (tmp_path / "split" / "train.jsonl").read_text(encoding="utf-8").count("\n") == 1
+
+
+def test_run_model_parses_answers_safely():
+    sys.path.insert(0, "tools")
+    from run_model import FIELDS, parse_answer
+    assert parse_answer('Here you go: {"rejection_ground": "waiting_period", "extra": 1}')["rejection_ground"] == "waiting_period"
+    assert set(parse_answer("no json at all")) == set(FIELDS)
+    assert parse_answer("[1, 2]")["insurer_name"] is None

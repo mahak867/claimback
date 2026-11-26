@@ -81,7 +81,8 @@ def extract(letter: str) -> dict:
     policy = re.search(r"Policy\s*(?:No\.?|Number|#)\s*[:\-]?\s*([A-Z0-9][A-Z0-9/\-]{4,})", letter, re.I)
     insurer = re.search(r"([A-Z][A-Za-z&.\- ]{2,60}?(?:Insurance|Assurance|General|Health)(?: [A-Z][A-Za-z.]*)*(?: Co\.?| Company| Limited| Ltd\.?)?)", letter)
     claim_type = ("cashless" if re.search(r"cashless|pre-?auth", low)
-                  else "partial_settlement" if re.search(r"partial|deduct", low) else "reimbursement")
+                  else "partial_settlement" if re.search(r"partial|deduct", low)
+                  else "reimbursement" if re.search(r"reimburs", low) else None)
     diag = re.search(r"(?:for|towards|treatment of|diagnosed with)\s+'?([A-Z][A-Za-z ()-]{3,60}?)'?\s+(?:at|from|in)\b", letter)
     return {
         "insurer_name": insurer.group(1).strip() if insurer else None,

@@ -9,7 +9,10 @@
     "training": "1x NVIDIA H100 80GB",
     "eval": "1x NVIDIA H100 80GB"
   },
-  "config": {
+  "held_out_test": "the 401 usable v1 letters, never used in training (tools/validate_dataset.py on v1)",
+  "status": "trained",
+  "trained_model_name": "adaption_qwen3_5_4b_indian_health_claim_reje_c9b0f086",
+  "config_requested": {
     "model": "Qwen/Qwen3.5-4B",
     "hyperparams": {
       "base_model_size": "4B",
@@ -32,7 +35,33 @@
       "train_on_inputs": false
     }
   },
-  "held_out_test": "the 401 usable v1 letters, never used in training (tools/validate_dataset.py on v1)",
-  "status": "trained",
-  "trained_model_name": "adaption_qwen3_5_4b_indian_health_claim_reje_c9b0f086"
+  "config_actual": {
+    "finetune_job_id": "fb826d37-e581-4e04-ac2c-ffa4be23feea",
+    "training_experiment_id": "c9b0f086-ffa9-4021-a234-2512e4390a30",
+    "original_model_name": "Qwen/Qwen3.5-4B",
+    "trained_model_name": "adaption_indian_health_claim_rejectio",
+    "training_method": "sft",
+    "training_type": "lora",
+    "data_format": "chat",
+    "hyperparams": {
+      "lora": true,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.1,
+      "n_evals": 5,
+      "n_epochs": 1,
+      "batch_size": "max",
+      "min_lr_ratio": 0.1,
+      "warmup_ratio": 0.08,
+      "weight_decay": 0.02,
+      "learning_rate": 3e-05,
+      "max_grad_norm": 1,
+      "base_model_size": "4B",
+      "train_on_inputs": false,
+      "lr_scheduler_type": "cosine",
+      "scheduler_num_cycles": 0.5,
+      "lora_trainable_modules": "k_proj,up_proj,o_proj,q_proj,down_proj,v_proj,gate_proj"
+    }
+  },
+  "note": "AutoScientist tuned the configuration itself; config_actual is what ran. The LoRA adapter is downloadable (adapter.tar.gz), so the model can be self-hosted on Qwen/Qwen3.5-4B."
 }

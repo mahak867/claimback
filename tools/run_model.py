@@ -35,8 +35,12 @@ def parse_answer(text: str) -> dict:
 
 
 def ask(letter: str) -> str:
-    body = json.dumps({"model": os.environ["CLAIMBACK_MODEL"], "temperature": 0,
-                       "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": letter}]})
+    # The fine-tuned model was trained on plain chats (letter -> JSON) with no system prompt, so ask it the
+    # same way. Set CLAIMBACK_SYSTEM_PROMPT=1 only for base models that need the instructions.
+    messages = [{"role": "user", "content": letter}]
+    if os.environ.get("CLAIMBACK_SYSTEM_PROMPT") == "1":
+        messages.insert(0, {"role": "system", "content": SYSTEM})
+    body = json.dumps({"model": os.environ["CLAIMBACK_MODEL"], "temperature": 0, "messages": messages})
     req = urllib.request.Request(os.environ["CLAIMBACK_BASE_URL"].rstrip("/") + "/chat/completions",
                                  data=body.encode(), headers={"Content-Type": "application/json"})
     if os.environ.get("CLAIMBACK_API_KEY"):

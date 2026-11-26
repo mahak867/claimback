@@ -60,3 +60,16 @@ def test_run_model_parses_answers_safely():
     assert parse_answer('Here you go: {"rejection_ground": "waiting_period", "extra": 1}')["rejection_ground"] == "waiting_period"
     assert set(parse_answer("no json at all")) == set(FIELDS)
     assert parse_answer("[1, 2]")["insurer_name"] is None
+
+
+def test_find_adapter_handles_nested_tarball(tmp_path):
+    sys.path.insert(0, "tools")
+    from run_local_adapter import find_adapter
+    (tmp_path / "out" / "best").mkdir(parents=True)
+    (tmp_path / "out" / "best" / "adapter_config.json").write_text("{}")
+    assert find_adapter(tmp_path).name == "best"
+
+
+def test_held_out_set_is_disjoint_from_training_style_inputs():
+    rows = [json.loads(l) for l in open("eval/test_v1_held_out.jsonl", encoding="utf-8")]
+    assert len(rows) == 401 and all("enhanced_prompt" in r for r in rows)

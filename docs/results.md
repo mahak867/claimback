@@ -44,4 +44,4 @@ To train: `python tools/prepare_training.py split/ v1_clean.jsonl v2_clean.jsonl
 
 ## Software
 
-33 Python tests (rules, citations, letter, deadlines, precedent finder, extraction baseline and evaluator, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.
+37 Python tests (rules, citations, letter, deadlines, precedent finder, extraction baseline and evaluator, dataset checker), plus browser tests and a WCAG 2.2 AA accessibility audit of all six prototype screens in light and dark mode on laptop and phone. All run on every push.

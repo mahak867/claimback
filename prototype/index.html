@@ -133,7 +133,7 @@ const CASES = [
   reason: 'Your claim stands repudiated under <mark class="t">Clause 7.3 (Non-disclosure of material facts)</mark> as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.',
   src: {
     rej: {e:'E1', t:'Rejection letter, page 1', q:'Your claim stands repudiated under Clause 7.3 (Non-disclosure of material facts) as the insured was found to be suffering from Hypertension prior to policy inception, which was not disclosed in the proposal form.'},
-    mor: {e:'E2', p:1, t:'IRDAI Master Circular on Health Insurance Business, 29 May 2024, moratorium', q:'After completion of sixty continuous months of coverage, no policy and claim shall be contestable on grounds of non-disclosure or misrepresentation, except on grounds of established fraud.'},
+    mor: {e:'E2', t:'IRDAI Master Circular on Health Insurance Business, 29 May 2024, Chapter I para 13, page 22', q:'No policy and claim of health insurance shall be contestable on any grounds of non-disclosure and/or misrepresentation except for established fraud, after the completion of the Moratorium Period, i.e. 60 months of continuous coverage'},
     pol: {e:'E3', t:'Your policy wording, page 14, Clause 7.3', q:'… subject to the moratorium period of 60 months of continuous coverage as stipulated by the Authority.'},
     cert: {e:'E4', t:'Renewal certificate, page 1', q:'Policy continuously renewed without break since 12/04/2019. Cumulative bonus: 50%.'},
     med: {e:'E5', t:'Pre-policy health check, 9 Apr 2019', q:'BP 128/82. No abnormalities detected. Accepted at standard rates.'}
@@ -159,7 +159,7 @@ const CASES = [
     ['Reading renewal certificate', 'Continuous cover since 12 Apr 2019 → 88 months at admission', 0],
     ['Classifying rejection reason', 'Non-disclosure at proposal (category G1)', 0],
     ['Rules engine: moratorium check', '88 ≥ 60 months, no fraud alleged, sum insured unchanged → ground found', 0],
-    ['Searching IRDAI regulations', 'Best match: Master Circular 2024, moratorium', 0],
+    ['Searching IRDAI regulations', 'Best match: Health Master Circular 2024, Chapter I para 13', 0],
     ['Checking pre-policy medical record', 'BP normal in 2019 → conflicts with the rejection reason', 0],
     ['Finding similar Ombudsman decisions', '2 published awards on non-disclosure', 0],
     ['Verifying every citation word for word', '5 of 5 quotes found in their sources', 0]
@@ -254,7 +254,7 @@ const CASES = [
 let ci = 0;
 const K = () => CASES[ci];
 const caseTabs = () => `<div class="tabs" role="group" aria-label="Sample case">${CASES.map((c,i)=>`<button data-case="${i}" aria-pressed="${i===ci}">Case ${i+1}: ${c.label}</button>`).join('')}</div>`;
-const chipsFor = keys => keys.map(k=>`<button class="chip" data-src="${k}"><b>${K().src[k].e}</b>${K().src[k].t.split(',')[0]}</button>`).join('');
+const chipsFor = keys => keys.map(k=>`<button class="chip" data-src="${k}"><b>${K().src[k].e}</b>${K().src[k].t.split(',')[0].replace(' on Health Insurance Business','')}</button>`).join('');
 
 const page = {
 home: () => `
@@ -352,7 +352,7 @@ letter: () => `
       <p>To the Grievance Redressal Officer,<br>${K().C.insurer.replace(' (fictional)','')}, ${K().C.city}</p>
       <p><b>Subject: Grievance against rejection of claim under Policy No. ${K().C.policy}, dated ${K().C.rejNum}</b></p>
       ${K().letter.map(p=>`<p>${p}</p>`).join('')}
-      <p>I request that you withdraw the rejection and settle the claim in full within the timeline required by IRDAI, and provide a copy of the complete claim file and the documents relied on.</p>
+      <p>I request that you withdraw the rejection and settle the claim in full within the timeline required by IRDAI, confirm that the rejection was approved by your Claims Review Committee as the IRDAI Master Circular on Health Insurance Business requires, and provide a copy of the complete claim file and the documents relied on.</p>
       <p>Yours faithfully,<br>${K().C.name}</p>
       <p class="small" style="font-family:'IBM Plex Sans',sans-serif;color:#5b6366">Sources: ${K().sources}</p>
     </div>
@@ -372,17 +372,16 @@ track: () => `
       <p class="mute">Dates are worked out from the day you send the grievance. Add them to your calendar so nothing lapses.</p>
       <ol class="rail">
         <li class="done"><span class="date">${K().C.rejected}</span>, claim rejected<br><span class="small mute">Rejection letter received</span></li>
-        <li class="now"><span class="date">Today</span>, send grievance to insurer<br><span class="small mute">Letter ready in the Letter tab</span></li>
-        <li><span class="date">+14 days</span>, insurer's reply due<br><span class="small mute">Upload their reply here and ClaimBack re-checks it</span></li>
-        <li><span class="date">If no fair reply</span>, escalate on IRDAI's Bima Bharosa portal<br><span class="small mute">Complaint text pre-filled</span></li>
-        <li><span class="date">Then</span>, Insurance Ombudsman complaint<br><span class="small mute">Pre-filled form; claims up to ₹50 lakh; free to file</span></li>
+        <li class="now"><span class="date">Today</span>, send the grievance to the insurer<br><span class="small mute">Letter ready in the Letter tab. Also register it on IRDAI's Bima Bharosa portal to track it.</span></li>
+        <li><span class="date">Within 14 days</span>, insurer's resolution due<br><span class="small mute">With reasons citing your policy terms. Upload it and ClaimBack re-checks it.</span></li>
+        <li><span class="date">If unsatisfactory</span>, Insurance Ombudsman<br><span class="small mute">Free; claims up to ₹50 lakh; in person, by post or email, or online at cioins.co.in</span></li>
       </ol>
     </div>
     <div class="card"><h2>What happens next</h2>
       <p>Start with the insurer. If the reply is unfair or late, the Ombudsman is free to use and you don't need a lawyer.</p>
       <button class="btn ghost" id="ics">Add dates to calendar</button>
       <p id="msg2" class="small" hidden></p>
-      <p class="gate">Timelines follow the IRDAI grievance rules and Insurance Ombudsman Rules 2017 (as amended); they are confirmed against the official text before release.</p>
+      <p class="gate">Steps and timelines from IRDAI's Master Circular on Protection of Policyholders' Interests 2024, Section VI (page 110).</p>
     </div>
   </div>`
 };

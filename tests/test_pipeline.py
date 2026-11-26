@@ -58,13 +58,13 @@ def test_letter_built_when_all_verified():
 def test_ladder_dates_and_limit():
     steps = ladder(date(2026, 11, 25), 246500)
     assert steps[1].due == date(2026, 12, 9)
-    assert steps[-1].name.startswith("Ombudsman") and steps[-1].due == date(2026, 12, 25)
+    assert steps[-1].name.startswith("Insurance Ombudsman") and steps[-1].due == date(2026, 12, 9)
     assert ladder(date(2026, 11, 25), 60_00_000)[-1].due is None
 
 
 def test_ics_has_one_event_per_dated_step():
     ics = to_ics(ladder(date(2026, 11, 25), 246500))
-    assert ics.count("BEGIN:VEVENT") == 4 and "DTSTART;VALUE=DATE:20261209" in ics
+    assert ics.count("BEGIN:VEVENT") == 3 and "DTSTART;VALUE=DATE:20261209" in ics
 
 
 def test_inr_grouping():
@@ -79,7 +79,7 @@ def test_letter_needs_grounds_and_citations():
 
 def test_ics_escapes_text():
     ics = to_ics(ladder(date(2026, 11, 25), 246500))
-    assert "Free\\; file" in ics and "portal\\, text" in ics
+    assert "Free\\; claims" in ics and "evidence pack\\; also" in ics
 
 
 def test_validator_dates_and_non_object(tmp_path):

@@ -9,10 +9,10 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 LIMITS = {
-    "insurer_grievance_reply_days": {"value": 14, "source": "IRDAI grievance redressal rules (most sources: 14 days; one older page says 15)", "confirmed": False},
-    "ombudsman_wait_days": {"value": 30, "source": "Insurance Ombudsman Rules 2017, as amended", "confirmed": False},
-    "ombudsman_file_within_days": {"value": 365, "source": "Insurance Ombudsman Rules 2017, as amended", "confirmed": False},
-    "ombudsman_max_claim_inr": {"value": 50_00_000, "source": "Insurance Ombudsman (Amendment) Rules 2023", "confirmed": False},
+    "insurer_grievance_reply_days": {"value": 14, "source": "Master Circular on Protection of Policyholders' Interests 2024, Section VI.2(i), p.110", "confirmed": True},
+    "ombudsman_max_claim_inr": {"value": 50_00_000, "source": "Master Circular on Protection of Policyholders' Interests 2024, Section VI.3(i), p.110", "confirmed": True},
+    # Not in the circulars; from the Insurance Ombudsman Rules 2017, still to be read at source.
+    "ombudsman_no_reply_days": {"value": 30, "source": "Insurance Ombudsman Rules 2017, as amended", "confirmed": False},
 }
 
 
@@ -26,15 +26,14 @@ class Step:
 def ladder(grievance_sent: date, claim_amount_inr: int) -> list[Step]:
     v = {k: x["value"] for k, x in LIMITS.items()}
     reply_due = grievance_sent + timedelta(days=v["insurer_grievance_reply_days"])
-    ombud_from = grievance_sent + timedelta(days=v["ombudsman_wait_days"])
     steps = [
-        Step("Send grievance to insurer", grievance_sent, "Letter with citations and evidence pack"),
-        Step("Insurer's reply due", reply_due, "Upload the reply; ClaimBack re-checks it"),
-        Step("Escalate on Bima Bharosa if no fair reply", reply_due + timedelta(days=1), "IRDAI's grievance portal, text pre-filled"),
+        Step("Send grievance to the insurer", grievance_sent,
+             "Letter with citations and evidence pack; also register it on Bima Bharosa to track it"),
+        Step("Insurer's resolution due", reply_due, "With reasons citing the policy terms; upload it and ClaimBack re-checks it"),
     ]
     if claim_amount_inr <= v["ombudsman_max_claim_inr"]:
-        steps.append(Step("Ombudsman complaint can be filed", ombud_from,
-                          f"Free; file within {v['ombudsman_file_within_days']} days of the insurer's final reply"))
+        steps.append(Step("Insurance Ombudsman, if the resolution is unsatisfactory", reply_due,
+                          "Free; claims up to Rs 50 lakh; in person, by post or email, or online at cioins.co.in"))
     else:
         steps.append(Step("Claim above the Ombudsman limit", None, "Consumer commission route instead"))
     return steps

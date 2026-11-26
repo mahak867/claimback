@@ -15,11 +15,11 @@ RULES = {
     "moratorium_months": {
         "value": 60,
         "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
-        "clause": None,
-        # Corroborated by several secondary sources (Complinity, Value Added, gameofinsurance,
-        # Oquilia): only established fraud is excepted, and a sum-insured increase restarts the
-        # clock for the added amount. Flip to True once read in the official IRDAI PDF.
-        "confirmed": False,
+        "clause": "Chapter I, para 13 (p.22): no claim contestable for non-disclosure or misrepresentation "
+                  "except established fraud after 60 months of continuous coverage; ported and migrated "
+                  "credits count. Sum-insured increases and permanent exclusions: Master Circular on "
+                  "Protection of Policyholders' Interests 2024, customer information sheet (p.196)",
+        "confirmed": True,
     },
     "ped_max_wait_months": {
         "value": 36,
@@ -30,8 +30,26 @@ RULES = {
     "cashless_decision_hours": {
         "value": 1,
         "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
-        "clause": None,
-        "confirmed": False,
+        "clause": "Chapter I, para 15(b) (p.22-23)",
+        "confirmed": True,
+    },
+    "discharge_authorisation_hours": {
+        "value": 3,
+        "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
+        "clause": "Chapter I, para 16(a)-(b) (p.23): extra charges from a delay are borne by the insurer",
+        "confirmed": True,
+    },
+    "insurer_collects_documents": {
+        "value": True,
+        "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
+        "clause": "Chapter I, para 17(c) (p.23): insurers and TPAs collect documents from hospitals",
+        "confirmed": True,
+    },
+    "rejection_must_cite_terms": {
+        "value": True,
+        "source": "IRDAI Master Circular on Health Insurance Business, 29 May 2024",
+        "clause": "Chapter I, para 17(b) (p.23)",
+        "confirmed": True,
     },
 }
 
@@ -47,6 +65,9 @@ class Case:
     pre_policy_check_normal: bool | None = None
     cashless_decision_hours: float | None = None
     sum_insured_increased_on: date | None = None  # the moratorium clock restarts for the added amount
+    permanent_exclusion_cited: bool = False  # permanent exclusions survive the moratorium
+    discharge_authorisation_hours: float | None = None
+    cites_specific_terms: bool = True  # does the rejection letter cite the policy terms it relies on?
 
 
 @dataclass
@@ -70,7 +91,7 @@ def moratorium(case: Case) -> Ground | None:
     limit = RULES["moratorium_months"]["value"]
     if case.rejection_ground != "non_disclosure_proposal":
         return None
-    if not case.continuous_cover or case.fraud_alleged:
+    if not case.continuous_cover or case.fraud_alleged or case.permanent_exclusion_cited:
         return None
     covered = months_between(case.policy_inception, case.admission)
     if covered < limit:
@@ -148,7 +169,52 @@ def cashless_delay(case: Case) -> Ground | None:
     )
 
 
-ALL_RULES = [moratorium, ped_wait_cap, insurer_own_health_check, cashless_delay]
+def documents_collected_by_insurer(case: Case) -> Ground | None:
+    """Insurers and TPAs must collect claim documents from the hospital themselves."""
+    if case.rejection_ground != "documents_not_submitted":
+        return None
+    return Ground(
+        rule="documents_collected_by_insurer",
+        title="The insurer must collect the documents itself",
+        explanation=("IRDAI requires insurers and TPAs to collect the required documents from the hospital; "
+                     "the policyholder is not required to submit them."),
+        sources=[RULES["insurer_collects_documents"]["source"] + ", " + RULES["insurer_collects_documents"]["clause"]],
+        letter=("Under the IRDAI Master Circular on Health Insurance Business, insurers and TPAs must collect the "
+                "required documents from the hospital, and the policyholder is not required to submit them."),
+    )
+
+
+def discharge_delay(case: Case) -> Ground | None:
+    limit = RULES["discharge_authorisation_hours"]["value"]
+    if case.discharge_authorisation_hours is None or case.discharge_authorisation_hours <= limit:
+        return None
+    return Ground(
+        rule="discharge_delay",
+        title="Charges from the late discharge approval are the insurer's to pay",
+        explanation=(f"Final discharge approval took {case.discharge_authorisation_hours:g} hours against the "
+                     f"{limit}-hour limit; any extra hospital charges from the delay must be borne by the insurer."),
+        sources=[RULES["discharge_authorisation_hours"]["source"] + ", " + RULES["discharge_authorisation_hours"]["clause"]],
+        letter=(f"Final discharge approval took {case.discharge_authorisation_hours:g} hours against the {limit}-hour "
+                "limit, so any additional hospital charges caused by the delay must be borne by you."),
+    )
+
+
+def vague_rejection(case: Case) -> Ground | None:
+    if case.cites_specific_terms:
+        return None
+    return Ground(
+        rule="vague_rejection",
+        title="The rejection does not cite the policy terms it relies on",
+        explanation=("A rejection must give full details with reference to the specific terms and conditions "
+                     "of the policy. This letter does not."),
+        sources=[RULES["rejection_must_cite_terms"]["source"] + ", " + RULES["rejection_must_cite_terms"]["clause"]],
+        letter=("Your letter does not refer to the specific terms and conditions of the policy relied on, as the "
+                "IRDAI Master Circular on Health Insurance Business requires."),
+    )
+
+
+ALL_RULES = [moratorium, ped_wait_cap, insurer_own_health_check, cashless_delay,
+             documents_collected_by_insurer, discharge_delay, vague_rejection]
 
 
 def run_rules(case: Case) -> list[Ground]:

@@ -41,7 +41,7 @@ flowchart LR
 | Path | What it is | Status |
 | --- | --- | --- |
 | [`prototype/`](prototype/index.html) | Clickable prototype of all six screens with three sample cases (two strong, one honestly rated Fair) and real Ombudsman awards, in English, Tamil and Hindi | Done |
-| [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium, pre-existing-disease wait cap, insurer's own health check, cashless delay; case strength | Done, tested |
+| [`claimback/rules.py`](claimback/rules.py) | Rules engine: moratorium (with sum-insured and permanent-exclusion limits), waiting-period cap, insurer collects documents, discharge and cashless delays, rejection must cite terms, insurer's own health check; case strength | Done, tested |
 | [`claimback/citations.py`](claimback/citations.py) | Citation verifier: a quote is shown only if found word for word in its source (OCR-tolerant) | Done, tested |
 | [`claimback/letter.py`](claimback/letter.py) | Grievance letter in the patient's voice; refuses to build while any citation is unverified | Done, tested |
 | [`claimback/deadlines.py`](claimback/deadlines.py) | Escalation ladder (insurer → Bima Bharosa → Ombudsman) and a calendar (.ics) export | Done, tested |
@@ -53,7 +53,7 @@ flowchart LR
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests (33 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
+Run the tests (37 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q
@@ -79,11 +79,16 @@ See [docs/results.md](docs/results.md). A keyword baseline scores 0.89 macro-F1 
 
 ## Rule sources
 
-Every limit in `rules.py` names its source and carries `confirmed: False` until a team member has read the clause in the official text:
+Every limit in [`claimback/rules.py`](claimback/rules.py) is confirmed against the official IRDAI text, with its clause recorded, and a test fails if any is not:
 
-- IRDAI Master Circular on Health Insurance Business, 29 May 2024 (IRDAI/HLT/CIR/PRO/84/5/2024)
-- IRDAI (Insurance Products) Regulations 2024
-- Insurance Ombudsman Rules 2017, as amended to 9 November 2023
+| Rule | Source |
+| --- | --- |
+| 60-month moratorium: no claim contestable for non-disclosure except established fraud; ported and migrated cover counts | Master Circular on Health Insurance Business (29 May 2024), Chapter I para 13, p.22 |
+| Moratorium covers the original sum insured; increases restart it; permanent exclusions survive it | Master Circular on Protection of Policyholders' Interests 2024, customer information sheet, p.196 |
+| Cashless decision within 1 hour; discharge approval within 3 hours, delay charges borne by the insurer | Health Master Circular, Chapter I paras 15(b), 16 |
+| No rejection without Claims Review Committee approval; rejection must cite specific policy terms; insurer collects documents from the hospital | Health Master Circular, Chapter I para 17(a)-(c), p.23 |
+| Insurer resolves a grievance within 14 days; Bima Bharosa; Ombudsman free, claims up to Rs 50 lakh | Policyholders' Interests circular, Section VI, p.110 |
+| Pre-existing-disease waiting period at most 36 months | IRDAI (Insurance Products) Regulations 2024; IRDAI Health Department page |
 
 ## Credits
 

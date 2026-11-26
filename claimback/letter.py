@@ -43,7 +43,9 @@ def grievance_letter(*, insurer: str, policy_no: str, name: str, claim_inr: int,
         body += [f"{i}. {g.letter or g.explanation}", ""]
     body += [
         "I request that you withdraw the repudiation, settle the claim in full within the timeline "
-        "required by IRDAI, and send me a copy of the complete claim file and the documents relied on.",
+        "required by IRDAI, confirm that the repudiation was approved by your Claims Review Committee as the "
+        "IRDAI Master Circular on Health Insurance Business requires, and send me a copy of the complete claim "
+        "file and the documents relied on.",
         "",
         "Yours faithfully,",
         name,

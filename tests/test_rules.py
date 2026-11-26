@@ -77,3 +77,22 @@ def test_sum_insured_increase_limits_moratorium_to_original_cover():
     assert "original sum insured" in g.explanation and "original sum insured" in g.letter
     g = [x for x in run_rules(sample(sum_insured_increased_on=date(2020, 1, 1))) if x.rule == "moratorium"][0]
     assert "original sum insured" not in g.explanation
+
+
+def test_permanent_exclusion_survives_moratorium():
+    assert "moratorium" not in rules_hit(sample(permanent_exclusion_cited=True))
+
+
+def test_documents_rule():
+    assert "documents_collected_by_insurer" in rules_hit(sample(rejection_ground="documents_not_submitted"))
+
+
+def test_discharge_delay_and_vague_rejection():
+    assert "discharge_delay" in rules_hit(sample(discharge_authorisation_hours=6))
+    assert "discharge_delay" not in rules_hit(sample(discharge_authorisation_hours=2))
+    assert "vague_rejection" in rules_hit(sample(cites_specific_terms=False))
+
+
+def test_every_limit_is_confirmed_with_a_clause():
+    from claimback.rules import RULES
+    assert all(r["confirmed"] and r["clause"] for r in RULES.values())

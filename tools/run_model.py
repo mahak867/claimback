@@ -22,6 +22,10 @@ FIELDS = ["insurer_name", "policy_number", "policy_inception_date", "claim_type"
 IN_KEYS = ("input", "prompt", "enhanced_prompt")
 SYSTEM = ("Read the Indian health insurance claim rejection letter and return only a JSON object with these keys: "
           + ", ".join(FIELDS) + ". Use null for facts the letter does not state. Dates as YYYY-MM-DD. "
+          "claim_amount_inr is an integer. claim_type is one of: cashless, reimbursement, partial_settlement. "
+          "rejection_ground is one of: non_disclosure_proposal, pre_existing_disease, waiting_period, "
+          "hospitalisation_not_justified, treatment_not_covered, amount_limited, documents_not_submitted, "
+          "policy_not_in_force, excluded_by_clause, fraud_misrepresentation. "
           "clause_cited and rejection_reason_quote must be copied character for character from the letter.")
 
 

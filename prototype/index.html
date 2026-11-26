@@ -261,7 +261,8 @@ function loadPdfJs(){
 }
 async function pdfToText(file){
   const lib = await loadPdfJs();
-  const doc = await lib.getDocument({data: await file.arrayBuffer()}).promise;
+  // isEvalSupported:false closes CVE-2024-4367 (font-based script execution) in pdf.js 3.x.
+  const doc = await lib.getDocument({data: await file.arrayBuffer(), isEvalSupported: false}).promise;
   const pages = [];
   for (let i = 1; i <= Math.min(doc.numPages, 10); i++) {
     const c = await (await doc.getPage(i)).getTextContent();
@@ -521,7 +522,7 @@ let timer;
 function render(){
   document.documentElement.lang = lang;
   const id = (location.hash.slice(1) || 'home');
-  const cur = page[id] ? id : 'home';
+  const cur = Object.prototype.hasOwnProperty.call(page, id) ? id : 'home';
   nav.innerHTML = S.map(([k,l])=>`<a href="#${k}" ${k===cur?'aria-current="page"':''}>${l}</a>`).join('');
   app.innerHTML = page[cur]();
   drawer.hidden = true;

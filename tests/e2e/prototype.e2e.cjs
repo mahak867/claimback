@@ -72,6 +72,12 @@ async function audit(page, label, failures) {
   await page.evaluate(() => { location.hash = 'letter'; });
   assert.ok((await page.textContent('main')).includes('₹42,000'));
 
+  // Router ignores names that aren't screens (no prototype lookups).
+  for (const bad of ['constructor', '__proto__', 'toString']) {
+    await page.evaluate(h => { location.hash = h; }, bad);
+    assert.match(await page.textContent('h1'), /Rejected health insurance claim/);
+  }
+
   // Live checker: a real letter analysed in the browser with the rules engine.
   await page.evaluate(() => { location.hash = 'try'; });
   await page.click('#trysample');

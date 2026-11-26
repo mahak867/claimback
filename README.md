@@ -46,13 +46,14 @@ flowchart LR
 | [`claimback/letter.py`](claimback/letter.py) | Grievance letter in the patient's voice; refuses to build while any citation is unverified | Done, tested |
 | [`claimback/deadlines.py`](claimback/deadlines.py) | Escalation ladder (insurer → Bima Bharosa → Ombudsman) and a calendar (.ics) export | Done, tested |
 | [`claimback/precedents.py`](claimback/precedents.py) | Precedent finder: past Ombudsman awards on the same rejection reason, ranked by similarity, outcome read from the decision text ("not stated" when absent, never guessed); tested on real redacted awards from Alei | Done, tested |
+| [`claimback/extract_baseline.py`](claimback/extract_baseline.py), [`tools/eval_extraction.py`](tools/eval_extraction.py), [`tools/prepare_training.py`](tools/prepare_training.py) | Rule-based extraction baseline (69.9% mean, under 10% on clause and reason quote), field-level evaluator, and 80/20 train/test split for fine-tuning | Done, tested |
 | [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
 | Model fine-tuning on Adaption | 1,000-example extraction dataset generated; Ombudsman-decision dataset next | In progress |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
-Run the tests (29 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
+Run the tests (33 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
 
 ```bash
 pip install pytest && python -m pytest -q

@@ -59,7 +59,7 @@ flowchart LR
 | [`claimback/demo.py`](claimback/demo.py) | End-to-end run on the sample case: rules → verified citations → letter → deadlines | Done |
 | [`claimback/taxonomy.py`](claimback/taxonomy.py) | Rejection-ground labels (adapted from Alei) | Done |
 | [`tools/validate_dataset.py`](tools/validate_dataset.py) | Screens Adaption-generated training data: JSON validity, verbatim quotes, dates, amounts, label balance | Done |
-| Model fine-tuning on Adaption | Dataset v2 (96% usable); run 1: Qwen3.5-4B, LoRA, 2 epochs on an H100 (`adaption_qwen3_5_4b_indian_health_claim_reje_c9b0f086`) | Trained; evaluation on 401 held-out letters next |
+| Model fine-tuning on Adaption | Dataset v2 (96% usable); run 1: Qwen3.5-4B, LoRA, 2 epochs on an H100 (`adaption_qwen3_5_4b_indian_health_claim_reje_c9b0f086`) | Trained and evaluated: 90.8% of fields vs 66.4% rules on 60 held-out letters |
 | Agent loop, retrieval, letter generator, web app | Built during the 24-hour round | Planned |
 
 Run the tests (38 Python tests, plus browser tests and a WCAG 2.2 AA accessibility audit of every prototype screen in light and dark mode, on laptop and phone; all run on every push by GitHub Actions) and the end-to-end demo:
@@ -83,6 +83,8 @@ python tools/validate_dataset.py path/to/export.jsonl
 ```
 
 ## Results so far
+
+**Model (run 1, 60 held-out letters):** our open Qwen3.5-4B model gets **90.8% of fields right vs 66.4% for rules**, the rejection reason at **0.918 macro-F1 vs 0.798** for a trained classifier, and never invents a quote. Honest caveat: the untuned base model given the same instructions scores about the same (92.4%), so run 1's fine-tuning gain is not shown yet; run 2 targets that. Details in [docs/results.md](docs/results.md).
 
 ![Rules break on realistic letters: the reason is found in 80% of simple letters, 48% of realistic ones; the exact reason sentence in only 8%](docs/baselines.png)
 

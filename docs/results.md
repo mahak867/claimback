@@ -35,7 +35,23 @@ Rule-based extractor ([`claimback/extract_baseline.py`](../claimback/extract_bas
 
 To train: `python tools/prepare_training.py split/ v1_clean.jsonl v2_clean.jsonl` writes `train.jsonl` and `test.jsonl` (80/20 by rejection reason, duplicates removed). v1 alone gives 300 train and 74 test rows.
 
-## Dataset quality
+## Model results: run 1 (26 Nov 2026)
+
+Qwen3.5-4B (Apache-2.0) with the LoRA adapter trained on dataset v2 by Adaption AutoScientist (1 epoch, 21 steps; training loss 1.05 to 0.33, eval loss 0.81 to 0.32). Tested on a stratified sample of **60 held-out v1 letters** ([eval/test_v1_sample60.jsonl](../eval/test_v1_sample60.jsonl), 6 per rejection reason), run on CPU. Predictions are saved in [eval/run1/](../eval/run1/).
+
+| Same 60 held-out letters | Rules | Classifier (v2) | Qwen3.5-4B, untuned | **Qwen3.5-4B, fine-tuned (run 1)** |
+| --- | --- | --- | --- | --- |
+| Mean of 11 fields | 66.4% | | 92.4% | **90.8%** |
+| Rejection reason | 78.3% accuracy | 0.798 macro-F1 | 0.919 macro-F1 | **0.918 macro-F1** (91.7%) |
+| Exact reason sentence | 10.0% | | 76.7% | **71.7%** |
+| Clause cited | 8.3% | | 81.7% | **80.0%** |
+| Quotes found word for word | 100% | | 96.7% | **100%** |
+
+Both models were given the same instruction listing the 11 fields and allowed values, because run 1 did not learn the exact field names on its own.
+
+**What this shows.** The open 4B model lifts extraction from 66% (rules) to about 91%, and the reason from 0.80 to 0.92 macro-F1. Run 1's fine-tuning does **not** yet beat prompting the untuned model (differences of 1-5 points are within noise on 60 letters); its one gain is that it never invented a quote. With 1 epoch and simple test letters, the base model already does well. **Run 2** (3 epochs, higher learning rate) is meant to learn the format without instructions and to beat the base model on the hard field, the exact reason sentence, measured on harder held-out letters.
+
+
 
 | Version | Rows | Usable under `validate_dataset.py` | Inputs that were instructions | Quotes not verbatim | Notes |
 | --- | --- | --- | --- | --- | --- |
